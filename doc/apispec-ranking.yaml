@@ -1,0 +1,127 @@
+openapi: 3.0.0
+info:
+  title: Zenn API
+  description: Zenn APIで集計したデータを元にまとめたランキング用API
+  version: 1.0.0
+
+servers:
+  - url: https://{domain}/api
+    description: Ranking API BaseURL
+    variables:
+      domain:
+        default: example.com
+        description: デプロイされるドメイン名
+
+paths:
+  /ranking:
+    get:
+      summary: 記事ランキングを取得
+      description: 日、週、月ごとの記事の集計データをDynamoDBの分析データから取得します
+      parameters:
+        - name: count
+          in: query
+          description: ランキング上位いくつかを示す数。10件固定
+          schema:
+            type: integer
+            default: 10
+            enum: [10]
+          required: false
+        - name: order
+          in: query
+          description: 並び替え順。"liked"(いいね)降順のみサポート
+          schema:
+            type: string
+            default: "liked"
+            enum: ["liked"]
+          required: false
+        - name: unit
+          in: query
+          description: 集計単位。"daily"(日)、"weekly"(週)、"monthly"(月)のいずれか
+          schema:
+            type: string
+            enum: ["daily", "weekly", "monthly"]
+          required: true
+        - name: range
+          in: query
+          description: 集計範囲。集計単位の数を示す(例：dailyで7を指定→1週間の集計データを取得する)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 31
+          required: true
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RankingResponse"
+        "400":
+          description: 不正なクエリパラメータ
+        "500":
+          description: Zenn APIの呼び出しに失敗, DynamoDBの格納に失敗, S3の格納に失敗
+
+components:
+  schemas:
+    ArticleUser:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 19167
+        username:
+          type: string
+          example: "kou_pg_0131"
+        name:
+          type: string
+          example: "koki"
+        avatar_small_url:
+          type: string
+          example: "https://lh3.googleusercontent.com/a-/AOh14Ghb4YGzhOmUME8kf5ygMCjAh9k1xKBO4KugU0LCAg=s96-c"
+
+    RankingArticle:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 243899
+        title:
+          type: string
+          example: "AI でテキストを関西弁に翻訳する「kansAI」の紹介 with Gemini"
+        comments_count:
+          type: integer
+          example: 0
+        liked_count:
+          type: integer
+          example: 30
+        article_type:
+          type: string
+          example: "tech"
+        published_at:
+          type: string
+          format: date-time
+          example: "2024-02-26T18:00:00.378+09:00"
+        user:
+          $ref: "#/components/schemas/ArticleUser"
+
+    RankingUnit:
+      type: object
+      properties:
+        key:
+          type: string
+          description: 集計単位の日付キー（日付、週、月の形式）
+          example: "2024-02-26"
+        articles:
+          type: array
+          description: ランキング記事の配列
+          items:
+            $ref: "#/components/schemas/RankingArticle"
+
+    RankingResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          description: 集計単位データの配列
+          items:
+            $ref: "#/components/schemas/RankingUnit"

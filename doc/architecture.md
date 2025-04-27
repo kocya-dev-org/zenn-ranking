@@ -15,31 +15,6 @@
   - vitest: 単体テスト
 - データベース
   - DynamoDB
-- リソース
-  - AWS
-    - CloudFront
-      - CDN として Web アプリを配信する
-      - S3 からの静的ファイルをキャッシュする
-      - `{domain}/api/*`に対するリクエストを API Gateway にリクエストする
-      - API 以外のリクエストを S3 にリクエストする
-    - API Gateway
-      - API のリクエストを元に Lambda を起動する
-    - S3
-      - Web アプリとして SPA を配置する
-      - 日単位の記事情報を格納する
-    - Lambda
-      - API Gateway へのリクエストを元にバックエンドのロジック動作を担う
-      - 寿命 1 日間のキャッシュを保持する
-      - メモリ割り当て: 1024MB (仮)
-      - ランタイム: Node.js 20.x
-      - タイムアウト: 15 分
-    - DynamoDB
-      - 記事の集計データを格納する
-      - TTL なし
-      - オンデマンド方式
-    - EventBridge
-      - 定期的に Lambda を起動し、記事の集計データを生成、格納する
-      - 01:00 に 1 回起動する cron = `0 0 1 * * ?`
 
 ## 外部リソース
 
@@ -60,6 +35,72 @@ CloudFront
 EventBridge
 └── Lambda
 ```
+
+### リソース詳細
+
+- CloudFront
+  - CDN として Web アプリを配信する
+  - S3 からの静的ファイルをキャッシュする
+  - `{domain}/api/*`に対するリクエストを API Gateway にリクエストする
+  - API 以外のリクエストを S3 にリクエストする
+- API Gateway
+  - API のリクエストを元に Lambda を起動する
+  - CORS 無効
+- S3
+  - Web アプリとして SPA を配置する
+  - 日単位の記事情報を格納する
+- Lambda
+  - API Gateway へのリクエストを元にバックエンドのロジック動作を担う
+  - キャッシュの有効期限は 1 日
+  - メモリ割り当て: 1024MB (仮)
+  - ランタイム: Node.js 20.x
+  - タイムアウト: 15 分
+- DynamoDB
+  - 記事の集計データを格納する
+  - TTL なし
+  - オンデマンド方式
+- EventBridge
+  - 定期的に Lambda を起動し、記事の集計データを生成、格納する
+  - 日本時間の 01:00 に 1 回起動する (cron = `0 0 16 * * ?` ※UTC 指定)
+
+### アクセス量試算
+
+#### CloudFront
+
+アクセス毎。
+キャッシュ有効、かつ期間が 1 日。
+その際の s3 アクセスは 1 回/day。
+
+#### API Gateway
+
+キャッシュ有効、かつ期間が 1 日。
+そのため日/週/月単位指定それぞれの呼び出しがあるとして、 1 日に 3 回リクエストが発行される見込み。
+
+#### Lambda
+
+- API
+  - API Gateway の項目を元に、3 回/day、処理時間は 1s 未満。
+- 収集・分析処理
+  - EventBridge 経由での呼び出し 1 回/day、処理時間は 30s 未満。
+
+#### DynamoDB
+
+- API
+  - API Gateway の項目を元に、合計 get x 23 / day
+    - 日単位: get x 7
+    - 週単位: get x 4
+    - 月単位: get x 12
+- 分析処理 合計 get x 40, put x 3 / day
+  - 日単位: put x 1 + get x max 7 + get x max 31
+  - 週単位: get x 1, put x 1
+  - 月単位: get x 1, put x 1
+
+#### S3
+
+- 収集処理
+  - 日単位記事情報: put x 1 / day
+- 分析処理
+  - 日単位: get x 1 / day
 
 ## 機能
 
@@ -94,6 +135,8 @@ EventBridge
 日の場合の例。
 data に集計単位データが集計範囲分だけ配列として格納される。
 集計単位データはその単位の日付キーとランキング情報の配列で示される。
+data は実際には集計範囲分のデータが格納される。
+articles は実際には表示ランキング上位数に応じたデータが格納される。
 
 ```json
 {
@@ -114,40 +157,12 @@ data に集計単位データが集計範囲分だけ配列として格納され
             "name": "koki",
             "avatar_small_url": "https://lh3.googleusercontent.com/a-/AOh14Ghb4YGzhOmUME8kf5ygMCjAh9k1xKBO4KugU0LCAg=s96-c"
           }
-        },
-        {
-          "id": 154465,
-          "title": "cat コマンド代替の Go 製 CLI 「gat」の紹介",
-          "comments_count": 9,
-          "liked_count": 89,
-          "article_type": "tech",
-          "published_at": "2023-03-20T19:10:50.194+09:00",
-          "user": {
-            "id": 19167,
-            "username": "kou_pg_0131",
-            "name": "koki",
-            "avatar_small_url": "https://lh3.googleusercontent.com/a-/AOh14Ghb4YGzhOmUME8kf5ygMCjAh9k1xKBO4KugU0LCAg=s96-c"
-          }
         }
       ]
     },
     {
       "key": "2024-02-27",
       "articles": [
-        {
-          "id": 243899,
-          "title": "AI でテキストを関西弁に翻訳する「kansAI」の紹介 with Gemini",
-          "comments_count": 0,
-          "liked_count": 30,
-          "article_type": "tech",
-          "published_at": "2024-02-26T18:00:00.378+09:00",
-          "user": {
-            "id": 19167,
-            "username": "kou_pg_0131",
-            "name": "koki",
-            "avatar_small_url": "https://lh3.googleusercontent.com/a-/AOh14Ghb4YGzhOmUME8kf5ygMCjAh9k1xKBO4KugU0LCAg=s96-c"
-          }
-        },
         {
           "id": 154465,
           "title": "cat コマンド代替の Go 製 CLI 「gat」の紹介",

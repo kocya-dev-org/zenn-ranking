@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: Zenn API
-  description: Zenn APIを利用したランキング用API
+  description: Zenn APIの取得データを元にした仕様書 (予期せぬ仕様変更などでこの記述内容が古くなっている可能性あり)
   version: 1.0.0
 
 servers:

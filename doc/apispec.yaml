@@ -1,0 +1,250 @@
+openapi: 3.0.0
+info:
+  title: Zenn API
+  description: Zenn APIを利用したランキング用API
+  version: 1.0.0
+
+servers:
+  - url: https://zenn.dev/api
+    description: Zenn API BaseURL
+
+paths:
+  /articles:
+    get:
+      summary: 記事一覧を取得
+      description: 指定された条件に合致する記事一覧を取得します
+      parameters:
+        - name: page
+          in: query
+          description: ページ番号
+          schema:
+            type: integer
+          required: false
+        - name: count
+          in: query
+          description: 一度に取得する記事数
+          schema:
+            type: integer
+          required: false
+        - name: order
+          in: query
+          description: 並び替え順
+          schema:
+            type: string
+          required: false
+        - name: topicname
+          in: query
+          description: トピック
+          schema:
+            type: string
+          required: false
+        - name: username
+          in: query
+          description: ユーザー名
+          schema:
+            type: string
+          required: false
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArticlesResponse"
+
+  /users/{username}:
+    get:
+      summary: ユーザー情報を取得
+      description: 指定されたユーザー名のユーザー情報を取得します
+      parameters:
+        - name: username
+          in: path
+          description: ユーザー名
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+
+components:
+  schemas:
+    Article:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 243899
+        post_type:
+          type: string
+          example: "Article"
+        title:
+          type: string
+          example: "AI でテキストを関西弁に翻訳する「kansAI」の紹介 with Gemini"
+        slug:
+          type: string
+          example: "kansai-cli-introduction"
+        comments_count:
+          type: integer
+          example: 0
+        liked_count:
+          type: integer
+          example: 30
+        body_letters_count:
+          type: integer
+          example: 11432
+        article_type:
+          type: string
+          example: "tech"
+        emoji:
+          type: string
+          example: "💭"
+        is_suspending_private:
+          type: boolean
+          example: false
+        published_at:
+          type: string
+          format: date-time
+          example: "2024-02-26T18:00:00.378+09:00"
+        body_updated_at:
+          type: string
+          format: date-time
+          example: "2024-02-23T18:42:10.089+09:00"
+        source_repo_updated_at:
+          type: string
+          format: date-time
+          example: "2024-02-23T18:42:10.082+09:00"
+        pinned:
+          type: boolean
+          example: false
+        path:
+          type: string
+          example: "/kou_pg_0131/articles/kansai-cli-introduction"
+        user:
+          $ref: "#/components/schemas/ArticleUser"
+        publication:
+          type: object
+          nullable: true
+          example: null
+
+    ArticleUser:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 19167
+        username:
+          type: string
+          example: "kou_pg_0131"
+        name:
+          type: string
+          example: "koki"
+        avatar_small_url:
+          type: string
+          example: "https://lh3.googleusercontent.com/a-/AOh14Ghb4YGzhOmUME8kf5ygMCjAh9k1xKBO4KugU0LCAg=s96-c"
+
+    ArticlesResponse:
+      type: object
+      properties:
+        articles:
+          type: array
+          description: 記事の配列
+          items:
+            $ref: "#/components/schemas/Article"
+        next_page:
+          type: integer
+          nullable: true
+          description: 次のページ。なければ null
+          example: 2
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 19167
+        username:
+          type: string
+          example: "kou_pg_0131"
+        name:
+          type: string
+          example: "koki"
+        avatar_small_url:
+          type: string
+          example: "https://lh3.googleusercontent.com/a-/AOh14Ghb4YGzhOmUME8kf5ygMCjAh9k1xKBO4KugU0LCAg=s96-c"
+        avatar_url:
+          type: string
+          example: "https://lh3.googleusercontent.com/a-/AOh14Ghb4YGzhOmUME8kf5ygMCjAh9k1xKBO4KugU0LCAg=s96-c"
+        bio:
+          type: string
+          example: "のんびり生きています。"
+        autolinked_bio:
+          type: string
+          example: "のんびり生きています。"
+        github_username:
+          type: string
+          example: "koki-develop"
+        twitter_username:
+          type: string
+          example: "koki_develop"
+        is_support_open:
+          type: boolean
+          example: true
+        tokusyo_contact:
+          type: string
+          nullable: true
+          example: null
+        tokusyo_name:
+          type: string
+          nullable: true
+          example: null
+        website_url:
+          type: string
+          example: "https://koki.me"
+        website_domain:
+          type: string
+          example: "koki.me"
+        total_liked_count:
+          type: integer
+          example: 4304
+        ga_tracking_id:
+          type: string
+          example: "G-WW5SRMZM2M"
+        hatena_id:
+          type: string
+          nullable: true
+          example: null
+        is_invoice_issuer:
+          type: boolean
+          example: false
+        follower_count:
+          type: integer
+          example: 209
+        following_count:
+          type: integer
+          example: 40
+        following_user_count:
+          type: integer
+          example: 40
+        following_publication_count:
+          type: integer
+          example: 0
+        articles_count:
+          type: integer
+          example: 94
+        books_count:
+          type: integer
+          example: 0
+        scraps_count:
+          type: integer
+          example: 7
+
+    UserResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/User"

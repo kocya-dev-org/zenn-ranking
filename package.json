@@ -1,0 +1,22 @@
+{
+  "name": "zenn-ranking",
+  "version": "1.0.0",
+  "main": "index.js",
+  "directories": {
+    "doc": "doc"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "workspaces": [
+    "back",
+    "webapp",
+    "cdk"
+  ],
+  "devDependencies": {
+    "eslint": "^9.25.1"
+  }
+}

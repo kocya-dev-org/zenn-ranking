@@ -13,8 +13,13 @@
   - Node.js
   - TypeScript
   - vitest: 単体テスト
+  - AWS SDK for JavaScript v3
+  - AWS SDK v3 Client mock
 - データベース
   - DynamoDB
+- CICD
+  - AWS CDK v2
+  - GitHub Actions
 
 ## 外部リソース
 

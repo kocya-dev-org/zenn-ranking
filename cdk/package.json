@@ -8,7 +8,8 @@
     "build": "tsc",
     "lint": "eslint .",
     "watch": "tsc -w",
-    "cdk": "cdk"
+    "cdk": "cdk",
+    "synth": "cdk synth"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",

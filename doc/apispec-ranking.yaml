@@ -75,7 +75,7 @@ components:
         name:
           type: string
           example: "koki"
-        avatar_small_url:
+        avatarSmallUrl:
           type: string
           example: "https://lh3.googleusercontent.com/a-/AOh14Ghb4YGzhOmUME8kf5ygMCjAh9k1xKBO4KugU0LCAg=s96-c"
 
@@ -88,16 +88,16 @@ components:
         title:
           type: string
           example: "AI でテキストを関西弁に翻訳する「kansAI」の紹介 with Gemini"
-        comments_count:
+        commentsCount:
           type: integer
           example: 0
-        liked_count:
+        likedCount:
           type: integer
           example: 30
-        article_type:
+        articleType:
           type: string
           example: "tech"
-        published_at:
+        publishedAt:
           type: string
           format: date-time
           example: "2024-02-26T18:00:00.378+09:00"

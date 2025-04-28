@@ -152,15 +152,15 @@ articles は実際には表示ランキング上位数に応じたデータが�
         {
           "id": 243899,
           "title": "AI でテキストを関西弁に翻訳する「kansAI」の紹介 with Gemini",
-          "comments_count": 0,
-          "liked_count": 30,
-          "article_type": "tech",
-          "published_at": "2024-02-26T18:00:00.378+09:00",
+          "commentsCount": 0,
+          "likedCount": 30,
+          "articleType": "tech",
+          "publishedAt": "2024-02-26T18:00:00.378+09:00",
           "user": {
             "id": 19167,
-            "username": "kou_pg_0131",
+            "userName": "kou_pg_0131",
             "name": "koki",
-            "avatar_small_url": "https://lh3.googleusercontent.com/a-/AOh14Ghb4YGzhOmUME8kf5ygMCjAh9k1xKBO4KugU0LCAg=s96-c"
+            "avatarSmallUrl": "https://lh3.googleusercontent.com/a-/AOh14Ghb4YGzhOmUME8kf5ygMCjAh9k1xKBO4KugU0LCAg=s96-c"
           }
         }
       ]
@@ -171,15 +171,15 @@ articles は実際には表示ランキング上位数に応じたデータが�
         {
           "id": 154465,
           "title": "cat コマンド代替の Go 製 CLI 「gat」の紹介",
-          "comments_count": 9,
-          "liked_count": 89,
-          "article_type": "tech",
-          "published_at": "2023-03-20T19:10:50.194+09:00",
+          "commentsCount": 9,
+          "likedCount": 89,
+          "articleType": "tech",
+          "publishedAt": "2023-03-20T19:10:50.194+09:00",
           "user": {
             "id": 19167,
-            "username": "kou_pg_0131",
+            "userName": "kou_pg_0131",
             "name": "koki",
-            "avatar_small_url": "https://lh3.googleusercontent.com/a-/AOh14Ghb4YGzhOmUME8kf5ygMCjAh9k1xKBO4KugU0LCAg=s96-c"
+            "avatarSmallUrl": "https://lh3.googleusercontent.com/a-/AOh14Ghb4YGzhOmUME8kf5ygMCjAh9k1xKBO4KugU0LCAg=s96-c"
           }
         }
       ]

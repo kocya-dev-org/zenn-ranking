@@ -9,11 +9,12 @@
     "lint": "eslint .",
     "watch": "tsc -w",
     "cdk": "cdk",
-    "synth": "cdk synth"
+    "synth": "cdk synth --all",
+    "deploy": "cdk deploy --all --require-approval never"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",
-    "@types/node": "22.7.9",
+    "@types/node": "^22.7.9",
     "aws-cdk": "2.1012.0",
     "eslint": "^9.25.1",
     "globals": "^16.0.0",

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
-import { getTrends, TrendData, TrendUnit, ArticleData } from '../feature/trends'
+import { getTrends, TrendData } from '../feature/trends'
 import RankingChart from '../components/ranking/RankingChart.vue'
 import RankingList from '../components/ranking/RankingList.vue'
 

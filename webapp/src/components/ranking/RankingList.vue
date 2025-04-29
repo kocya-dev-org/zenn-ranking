@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ArticleData } from '../../feature/trends'
 
-const props = defineProps<{
+defineProps<{
   articles: ArticleData[]
 }>()
 

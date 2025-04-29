@@ -1,4 +1,4 @@
-import { APIGatewayProxyEvent } from "@types/aws-lambda";
+import { APIGatewayProxyEvent } from "aws-lambda";
 
 export const handler = async (event: APIGatewayProxyEvent) => {
   const { name } = event.queryStringParameters || { name: "World" };

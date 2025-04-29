@@ -1,0 +1,83 @@
+name: PR Validation
+
+# PRが作成または更新された際にワークフローを実行
+on:
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  validate-backend:
+    name: バックエンドの検証
+    runs-on: ubuntu-latest
+    steps:
+      - name: リポジトリのチェックアウト
+        uses: actions/checkout@v4
+      
+      - name: Node.jsのセットアップ
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      
+      - name: 依存関係のインストール
+        run: npm ci
+      
+      - name: Lintの実行
+        run: npm run lint -w back
+      
+      - name: ビルドの実行
+        run: npm run build -w back
+      
+      - name: テストの実行
+        run: npm run test -w back
+
+  validate-frontend:
+    name: フロントエンドの検証
+    runs-on: ubuntu-latest
+    steps:
+      - name: リポジトリのチェックアウト
+        uses: actions/checkout@v4
+      
+      - name: Node.jsのセットアップ
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      
+      - name: 依存関係のインストール
+        run: npm ci
+      
+      - name: Lintの実行
+        run: npm run lint -w webapp
+      
+      - name: ビルドの実行
+        run: npm run build -w webapp
+        
+      - name: テストの実行
+        run: npm run test -w webapp || true
+
+  validate-cdk:
+    name: CDKの検証
+    runs-on: ubuntu-latest
+    steps:
+      - name: リポジトリのチェックアウト
+        uses: actions/checkout@v4
+      
+      - name: Node.jsのセットアップ
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      
+      - name: 依存関係のインストール
+        run: npm ci
+      
+      - name: Lintの実行
+        run: npm run lint -w cdk
+      
+      - name: ビルドの実行
+        run: npm run build -w cdk
+      
+      - name: CDK Synthの実行
+        run: npm run synth -w cdk

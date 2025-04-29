@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, onUnmounted } from 'vue'
 import * as echarts from 'echarts'
-import { TrendData } from '../../feature/trends'
+import type { TrendData } from '../../feature/trends'
 
 const props = defineProps<{
   trendData: TrendData

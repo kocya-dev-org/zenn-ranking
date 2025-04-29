@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArticleData } from '../../feature/trends'
+import type { ArticleData } from '../../feature/trends'
 
 defineProps<{
   articles: ArticleData[]

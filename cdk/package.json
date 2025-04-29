@@ -9,8 +9,8 @@
     "lint": "eslint .",
     "watch": "tsc -w",
     "cdk": "cdk",
-    "synth": "cdk synth",
-    "deploy": "cdk deploy"
+    "synth": "cdk synth --all",
+    "deploy": "cdk deploy --all --require-approval never"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",

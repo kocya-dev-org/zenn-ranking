@@ -1,4 +1,4 @@
-import * as dayjs from "dayjs";
+import dayjs from "dayjs";
 
 /**
  * ユーザーの基本的なプロフィール情報を表します。
@@ -66,7 +66,7 @@ export const getTrends = async (unit: string, range: number): Promise<TrendData>
   await setTimeout(() => {}, 1);
   console.log("getTrends", unit, range);
   // dummy
-  const now = new dayjs.Dayjs();
+  const now = dayjs();
   const getKey = (unit: string, index: number) => {
     switch (unit) {
       case "day":

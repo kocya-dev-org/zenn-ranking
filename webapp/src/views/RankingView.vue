@@ -15,7 +15,16 @@ const fetchData = async () => {
     // 日: 7日分、週: 4週分、月: 12ヶ月分のデータを取得
     const range = activeTimeUnit.value === 'daily' ? 7 : 
                   activeTimeUnit.value === 'weekly' ? 4 : 12
-    trendData.value = await getTrends(activeTimeUnit.value, range)
+    
+    // trends.tsの関数は'day', 'week', 'month'を期待しているので変換
+    const unitMap = {
+      'daily': 'day',
+      'weekly': 'week',
+      'monthly': 'month'
+    }
+    const unit = unitMap[activeTimeUnit.value as keyof typeof unitMap]
+    
+    trendData.value = await getTrends(unit, range)
   } catch (error) {
     console.error('Error fetching trend data:', error)
   } finally {

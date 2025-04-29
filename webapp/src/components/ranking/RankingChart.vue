@@ -27,8 +27,8 @@ const updateChart = () => {
   // X軸のラベル（日付や週番号など）
   const xAxisLabels = data.map(item => item.key)
   
-  // 上位5記事のデータを準備
-  const topArticles = data[0].articles.slice(0, 5)
+  // 上位10記事のデータを準備
+  const topArticles = data[0].articles.slice(0, 10)
   const series = topArticles.map(article => {
     const seriesData = data.map(item => {
       const found = item.articles.find(a => a.id === article.id)

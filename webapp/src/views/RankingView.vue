@@ -38,11 +38,13 @@ watch(activeTimeUnit, fetchData)
 
 <template>
   <div>
-    <el-tabs v-model="activeTimeUnit" class="time-unit-tabs">
-      <el-tab-pane label="daily" name="daily"></el-tab-pane>
-      <el-tab-pane label="weekly" name="weekly"></el-tab-pane>
-      <el-tab-pane label="monthly" name="monthly"></el-tab-pane>
-    </el-tabs>
+    <div class="time-unit-selector">
+      <el-radio-group v-model="activeTimeUnit" size="large">
+        <el-radio-button label="daily">daily</el-radio-button>
+        <el-radio-button label="weekly">weekly</el-radio-button>
+        <el-radio-button label="monthly">monthly</el-radio-button>
+      </el-radio-group>
+    </div>
 
     <el-card class="chart-card">
       <template #header>
@@ -72,8 +74,10 @@ watch(activeTimeUnit, fetchData)
 </template>
 
 <style scoped>
-.time-unit-tabs {
+.time-unit-selector {
   margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
 }
 .chart-card, .ranking-card {
   margin-bottom: 20px;

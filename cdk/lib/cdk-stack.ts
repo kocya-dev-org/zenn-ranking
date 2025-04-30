@@ -1,21 +1,21 @@
-import * as cdk from 'aws-cdk-lib';
-import { Construct } from 'constructs';
-import * as s3 from 'aws-cdk-lib/aws-s3';
-import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
-import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
-import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
-import * as lambda from 'aws-cdk-lib/aws-lambda';
-import * as apigateway from 'aws-cdk-lib/aws-apigateway';
-import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
-import * as events from 'aws-cdk-lib/aws-events';
-import * as targets from 'aws-cdk-lib/aws-events-targets';
+import * as cdk from "aws-cdk-lib";
+import { Construct } from "constructs";
+import * as s3 from "aws-cdk-lib/aws-s3";
+import * as s3deploy from "aws-cdk-lib/aws-s3-deployment";
+import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
+import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as apigateway from "aws-cdk-lib/aws-apigateway";
+import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
+import * as events from "aws-cdk-lib/aws-events";
+import * as targets from "aws-cdk-lib/aws-events-targets";
 
 export class CdkStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const PREFIX = 'zenn-ranking';
-    const API_PATH = 'api';
+    const PREFIX = "zenn-ranking";
+    const API_PATH = "api";
 
     const webappBucket = new s3.Bucket(this, `${PREFIX}-webapp-bucket`, {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
@@ -33,29 +33,29 @@ export class CdkStack extends cdk.Stack {
 
     const dailyTable = new dynamodb.Table(this, `${PREFIX}-analysis-daily-table`, {
       tableName: `${PREFIX}-analysis-daily-table`,
-      partitionKey: { name: 'yyyy-mm-dd', type: dynamodb.AttributeType.STRING },
+      partitionKey: { name: "yyyy-mm-dd", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
     const weeklyTable = new dynamodb.Table(this, `${PREFIX}-analysis-weekly-table`, {
       tableName: `${PREFIX}-analysis-weekly-table`,
-      partitionKey: { name: 'yyyy-ww', type: dynamodb.AttributeType.STRING },
+      partitionKey: { name: "yyyy-mm-dd", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
     const monthlyTable = new dynamodb.Table(this, `${PREFIX}-analysis-monthly-table`, {
       tableName: `${PREFIX}-analysis-monthly-table`,
-      partitionKey: { name: 'yyyy-mm', type: dynamodb.AttributeType.STRING },
+      partitionKey: { name: "yyyy-mm", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
     const apiHandler = new lambda.Function(this, `${PREFIX}-api-handler`, {
       runtime: lambda.Runtime.NODEJS_20_X,
-      code: lambda.Code.fromAsset('../back/api'),
-      handler: 'src/handler.handler',
+      code: lambda.Code.fromAsset("../back/api"),
+      handler: "src/handler.handler",
       timeout: cdk.Duration.minutes(15),
       memorySize: 1024,
       environment: {
@@ -67,8 +67,8 @@ export class CdkStack extends cdk.Stack {
 
     const batchHandler = new lambda.Function(this, `${PREFIX}-batch-handler`, {
       runtime: lambda.Runtime.NODEJS_20_X,
-      code: lambda.Code.fromAsset('../back/batch'),
-      handler: 'src/batchHandler.handler',
+      code: lambda.Code.fromAsset("../back/batch"),
+      handler: "src/batchHandler.handler",
       timeout: cdk.Duration.minutes(15),
       memorySize: 1024,
       environment: {
@@ -82,11 +82,11 @@ export class CdkStack extends cdk.Stack {
     dailyTable.grantReadWriteData(apiHandler);
     weeklyTable.grantReadWriteData(apiHandler);
     monthlyTable.grantReadWriteData(apiHandler);
-    
+
     dailyTable.grantReadWriteData(batchHandler);
     weeklyTable.grantReadWriteData(batchHandler);
     monthlyTable.grantReadWriteData(batchHandler);
-    
+
     dataBucket.grantReadWrite(batchHandler);
 
     const api = new apigateway.RestApi(this, `${PREFIX}-api`, {
@@ -98,11 +98,11 @@ export class CdkStack extends cdk.Stack {
     });
 
     const apiResource = api.root.addResource(API_PATH);
-    const rankingResource = apiResource.addResource('ranking');
-    rankingResource.addMethod('GET', new apigateway.LambdaIntegration(apiHandler));
+    const rankingResource = apiResource.addResource("ranking");
+    rankingResource.addMethod("GET", new apigateway.LambdaIntegration(apiHandler));
 
     const rule = new events.Rule(this, `${PREFIX}-daily-rule`, {
-      schedule: events.Schedule.cron({ minute: '0', hour: '16', day: '*', month: '*', year: '*' }),
+      schedule: events.Schedule.cron({ minute: "0", hour: "16", day: "*", month: "*", year: "*" }),
     });
     rule.addTarget(new targets.LambdaFunction(batchHandler));
 
@@ -119,33 +119,33 @@ export class CdkStack extends cdk.Stack {
           cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
         },
       },
-      defaultRootObject: 'index.html',
+      defaultRootObject: "index.html",
       errorResponses: [
         {
           httpStatus: 404,
           responseHttpStatus: 200,
-          responsePagePath: '/index.html',
+          responsePagePath: "/index.html",
         },
       ],
     });
 
-    new cdk.CfnOutput(this, 'WebsiteURL', {
+    new cdk.CfnOutput(this, "WebsiteURL", {
       value: `https://${distribution.distributionDomainName}`,
-      description: 'Website URL',
+      description: "Website URL",
     });
 
     try {
-      const distPath = '../webapp/dist';
+      const distPath = "../webapp/dist";
       new s3deploy.BucketDeployment(this, `${PREFIX}-webapp-deployment`, {
         sources: [s3deploy.Source.asset(distPath)],
         destinationBucket: webappBucket,
         distribution,
-        distributionPaths: ['/*'],
+        distributionPaths: ["/*"],
       });
     } catch {
-      new cdk.CfnOutput(this, 'WebappDeploymentInfo', {
-        value: 'Webapp will be deployed during the CI/CD pipeline',
-        description: 'Webapp deployment information',
+      new cdk.CfnOutput(this, "WebappDeploymentInfo", {
+        value: "Webapp will be deployed during the CI/CD pipeline",
+        description: "Webapp deployment information",
       });
     }
   }

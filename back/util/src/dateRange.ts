@@ -8,7 +8,7 @@ import type dayjs from "dayjs";
  * @param range - 範囲の長さを指定する数値。
  * @returns 指定された単位と範囲に基づいた日付範囲を表す `DateRange` オブジェクト。
  *   "day": ["YYYY-MM-DD", "YYYY-MM-DD", ...]
- *   "week": ["W01", "W02", ...]
+ *   "week": ["YYYY-MM-DD", "YYYY-MM-DD", ...] ※週の始まり(月曜日)の日付文字列のリスト
  *   "month": ["YYYY-MM", "YYYY-MM", ...]
  * @throws エラー - サポートされていない単位が指定された場合にスローされます。
  */

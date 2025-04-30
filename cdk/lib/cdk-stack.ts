@@ -134,12 +134,19 @@ export class CdkStack extends cdk.Stack {
       description: 'Website URL',
     });
 
-    const distPath = '../webapp/dist';
-    new s3deploy.BucketDeployment(this, `${PREFIX}-webapp-deployment`, {
-      sources: [s3deploy.Source.asset(distPath)],
-      destinationBucket: webappBucket,
-      distribution,
-      distributionPaths: ['/*'],
-    });
+    try {
+      const distPath = '../webapp/dist';
+      new s3deploy.BucketDeployment(this, `${PREFIX}-webapp-deployment`, {
+        sources: [s3deploy.Source.asset(distPath)],
+        destinationBucket: webappBucket,
+        distribution,
+        distributionPaths: ['/*'],
+      });
+    } catch (error) {
+      new cdk.CfnOutput(this, 'WebappDeploymentInfo', {
+        value: 'Webapp will be deployed during the CI/CD pipeline',
+        description: 'Webapp deployment information',
+      });
+    }
   }
 }

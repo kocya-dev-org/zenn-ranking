@@ -13,10 +13,7 @@ describe("getDateRange", () => {
       const result = getDateRange("day", targetDate, range);
 
       // 期待される結果
-      const expected = {
-        start: "2023-10-06",
-        end: "2023-10-10",
-      };
+      const expected = ["2023-10-06", "2023-10-07", "2023-10-08", "2023-10-09", "2023-10-10"];
 
       // 検証
       expect(result).toEqual(expected);
@@ -28,10 +25,7 @@ describe("getDateRange", () => {
 
       const result = getDateRange("day", targetDate, range);
 
-      const expected = {
-        start: "2023-10-10",
-        end: "2023-10-10",
-      };
+      const expected = ["2023-10-10"];
 
       expect(result).toEqual(expected);
     });

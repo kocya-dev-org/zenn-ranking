@@ -1,10 +1,5 @@
 import type dayjs from "dayjs";
 
-export type DateRange = {
-  start: string;
-  end: string;
-};
-
 /**
  * 指定された単位、基準日、範囲に基づいて日付範囲を取得します。
  *
@@ -12,9 +7,12 @@ export type DateRange = {
  * @param targetDate - 範囲の基準となる日付を表す `dayjs.Dayjs` オブジェクト。
  * @param range - 範囲の長さを指定する数値。
  * @returns 指定された単位と範囲に基づいた日付範囲を表す `DateRange` オブジェクト。
+ *   "day": ["YYYY-MM-DD", "YYYY-MM-DD", ...]
+ *   "week": ["W01", "W02", ...]
+ *   "month": ["YYYY-MM", "YYYY-MM", ...]
  * @throws エラー - サポートされていない単位が指定された場合にスローされます。
  */
-export const getDateRange = (unit: string, targetDate: dayjs.Dayjs, range: number): DateRange => {
+export const getDateRange = (unit: string, targetDate: dayjs.Dayjs, range: number): string[] => {
   if (range <= 0) {
     throw new Error("Range must be a positive number.");
   }
@@ -22,9 +20,9 @@ export const getDateRange = (unit: string, targetDate: dayjs.Dayjs, range: numbe
     case "day":
       return getDateRangeByDay(targetDate, range);
     case "week":
-      return { start: "dummy", end: "dummy" };
+      return ["dummy", "dummy"];
     case "month":
-      return { start: "dummy", end: "dummy" };
+      return ["dummy", "dummy"];
     default:
       throw new Error(`Unsupported unit: ${unit}`);
   }
@@ -37,8 +35,9 @@ export const getDateRange = (unit: string, targetDate: dayjs.Dayjs, range: numbe
  * @param range - 日付範囲の長さ (日数)。範囲は targetDate を含み、過去に遡る形で計算されます。
  * @returns 日付範囲オブジェクト。開始日 (`start`) と終了日 (`end`) は "YYYY-MM-DD" 形式の文字列として返されます。
  */
-export const getDateRangeByDay = (targetDate: dayjs.Dayjs, range: number): DateRange => {
+export const getDateRangeByDay = (targetDate: dayjs.Dayjs, range: number): string[] => {
   const start = targetDate.subtract(range - 1, "day");
   const end = targetDate;
-  return { start: start.format("YYYY-MM-DD"), end: end.format("YYYY-MM-DD") };
+  // startを起点に、0 <= n && n < range の範囲で日付文字列のリストを生成
+  return Array.from({ length: range }, (_, n) => start.add(n, "day").format("YYYY-MM-DD"));
 };

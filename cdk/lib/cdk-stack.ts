@@ -9,6 +9,7 @@ import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as events from 'aws-cdk-lib/aws-events';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
+import * as fs from 'fs-extra';
 
 export class CdkStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -134,11 +135,23 @@ export class CdkStack extends cdk.Stack {
       description: 'Website URL',
     });
 
-    new s3deploy.BucketDeployment(this, `${PREFIX}-webapp-deployment`, {
-      sources: [s3deploy.Source.asset('../webapp/dist')],
-      destinationBucket: webappBucket,
-      distribution,
-      distributionPaths: ['/*'],
-    });
+    if (process.env.CI === 'true') {
+      new cdk.CfnOutput(this, 'WebappDeploymentStatus', {
+        value: 'S3 deployment skipped in CI environment',
+        description: 'Webapp deployment status',
+      });
+    } else {
+      const distPath = '../webapp/dist';
+      if (fs.existsSync(distPath)) {
+        new s3deploy.BucketDeployment(this, `${PREFIX}-webapp-deployment`, {
+          sources: [s3deploy.Source.asset(distPath)],
+          destinationBucket: webappBucket,
+          distribution,
+          distributionPaths: ['/*'],
+        });
+      } else {
+        console.log(`Warning: ${distPath} directory not found. Skipping webapp deployment.`);
+      }
+    }
   }
 }

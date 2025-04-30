@@ -13,10 +13,12 @@
     "deploy": "cdk deploy --all --require-approval never"
   },
   "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
     "@types/jest": "^29.5.14",
-    "@types/node": "^22.7.9",
+    "@types/node": "^22.15.3",
     "aws-cdk": "2.1012.0",
     "eslint": "^9.25.1",
+    "fs-extra": "^11.3.0",
     "globals": "^16.0.0",
     "ts-node": "^10.9.2",
     "typescript": "~5.6.3",

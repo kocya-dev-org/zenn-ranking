@@ -1,6 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
@@ -131,6 +132,13 @@ export class CdkStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'WebsiteURL', {
       value: `https://${distribution.distributionDomainName}`,
       description: 'Website URL',
+    });
+
+    new s3deploy.BucketDeployment(this, `${PREFIX}-webapp-deployment`, {
+      sources: [s3deploy.Source.asset('../webapp/dist')],
+      destinationBucket: webappBucket,
+      distribution,
+      distributionPaths: ['/*'],
     });
   }
 }

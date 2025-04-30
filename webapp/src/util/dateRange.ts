@@ -37,7 +37,6 @@ export const getDateRange = (unit: string, targetDate: dayjs.Dayjs, range: numbe
  */
 export const getDateRangeByDay = (targetDate: dayjs.Dayjs, range: number): string[] => {
   const start = targetDate.subtract(range - 1, "day");
-  const end = targetDate;
   // startを起点に、0 <= n && n < range の範囲で日付文字列のリストを生成
   return Array.from({ length: range }, (_, n) => start.add(n, "day").format("YYYY-MM-DD"));
 };

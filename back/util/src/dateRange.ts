@@ -22,7 +22,7 @@ export const getDateRange = (unit: string, targetDate: dayjs.Dayjs, range: numbe
     case "week":
       return getDateRangeByWeek(targetDate, range);
     case "month":
-      return ["dummy", "dummy"];
+      return getDateRangeByMonth(targetDate, range);
     default:
       throw new Error(`Unsupported unit: ${unit}`);
   }
@@ -58,4 +58,18 @@ export const getDateRangeByWeek = (targetDate: dayjs.Dayjs, range: number): stri
   
   // startを起点に、0 <= n && n < range の範囲で各週の月曜日の文字列のリストを生成
   return Array.from({ length: range }, (_, n) => start.add(n, "week").format("YYYY-MM-DD"));
+};
+
+/**
+ * 指定された日付を基準に、指定された範囲の月範囲を取得します。
+ *
+ * @param targetDate - 範囲の基準となる日付 (dayjs.Dayjs オブジェクト)。
+ * @param range - 月範囲の長さ (月数)。範囲は targetDate を含む月から、過去に遡る形で計算されます。
+ * @returns 各月の日付を "YYYY-MM" 形式の文字列として返します。
+ */
+export const getDateRangeByMonth = (targetDate: dayjs.Dayjs, range: number): string[] => {
+  const start = targetDate.subtract(range - 1, "month");
+  
+  // startを起点に、0 <= n && n < range の範囲で各月の文字列のリストを生成
+  return Array.from({ length: range }, (_, n) => start.add(n, "month").format("YYYY-MM"));
 };

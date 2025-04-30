@@ -20,7 +20,7 @@ export const getDateRange = (unit: string, targetDate: dayjs.Dayjs, range: numbe
     case "day":
       return getDateRangeByDay(targetDate, range);
     case "week":
-      return ["dummy", "dummy"];
+      return getDateRangeByWeek(targetDate, range);
     case "month":
       return ["dummy", "dummy"];
     default:
@@ -39,4 +39,23 @@ export const getDateRangeByDay = (targetDate: dayjs.Dayjs, range: number): strin
   const start = targetDate.subtract(range - 1, "day");
   // startを起点に、0 <= n && n < range の範囲で日付文字列のリストを生成
   return Array.from({ length: range }, (_, n) => start.add(n, "day").format("YYYY-MM-DD"));
+};
+
+/**
+ * 指定された日付を基準に、指定された範囲の週範囲を取得します。
+ * 週は月曜日から日曜日として扱います。
+ *
+ * @param targetDate - 範囲の基準となる日付 (dayjs.Dayjs オブジェクト)。
+ * @param range - 週範囲の長さ (週数)。範囲は targetDate を含む週から、過去に遡る形で計算されます。
+ * @returns 各週の月曜日の日付を "YYYY-MM-DD" 形式の文字列として返します。
+ */
+export const getDateRangeByWeek = (targetDate: dayjs.Dayjs, range: number): string[] => {
+  const dayOfWeek = targetDate.day();
+  const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  const mondayOfTargetWeek = targetDate.subtract(daysToSubtract, "day");
+  
+  const start = mondayOfTargetWeek.subtract(range - 1, "week");
+  
+  // startを起点に、0 <= n && n < range の範囲で各週の月曜日の文字列のリストを生成
+  return Array.from({ length: range }, (_, n) => start.add(n, "week").format("YYYY-MM-DD"));
 };

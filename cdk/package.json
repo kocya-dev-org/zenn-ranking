@@ -5,7 +5,7 @@
     "cdk": "bin/cdk.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --noemit",
     "lint": "eslint .",
     "watch": "tsc -w",
     "cdk": "cdk",

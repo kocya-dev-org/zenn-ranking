@@ -135,23 +135,12 @@ export class CdkStack extends cdk.Stack {
       description: 'Website URL',
     });
 
-    if (process.env.CI === 'true') {
-      new cdk.CfnOutput(this, 'WebappDeploymentStatus', {
-        value: 'S3 deployment skipped in CI environment',
-        description: 'Webapp deployment status',
-      });
-    } else {
-      const distPath = '../webapp/dist';
-      if (fs.existsSync(distPath)) {
-        new s3deploy.BucketDeployment(this, `${PREFIX}-webapp-deployment`, {
-          sources: [s3deploy.Source.asset(distPath)],
-          destinationBucket: webappBucket,
-          distribution,
-          distributionPaths: ['/*'],
-        });
-      } else {
-        console.log(`Warning: ${distPath} directory not found. Skipping webapp deployment.`);
-      }
-    }
+    const distPath = '../webapp/dist';
+    new s3deploy.BucketDeployment(this, `${PREFIX}-webapp-deployment`, {
+      sources: [s3deploy.Source.asset(distPath)],
+      destinationBucket: webappBucket,
+      distribution,
+      distributionPaths: ['/*'],
+    });
   }
 }

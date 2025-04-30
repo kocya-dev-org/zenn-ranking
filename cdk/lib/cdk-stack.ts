@@ -142,7 +142,7 @@ export class CdkStack extends cdk.Stack {
         distribution,
         distributionPaths: ['/*'],
       });
-    } catch (error) {
+    } catch {
       new cdk.CfnOutput(this, 'WebappDeploymentInfo', {
         value: 'Webapp will be deployed during the CI/CD pipeline',
         description: 'Webapp deployment information',

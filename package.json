@@ -18,5 +18,10 @@
   ],
   "devDependencies": {
     "eslint": "^9.25.1"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "back3.799.0",
+    "axios": "back1.9.0",
+    "dayjs": "back1.11.13"
   }
 }

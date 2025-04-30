@@ -81,4 +81,42 @@ describe("getDateRange", () => {
       expect(result).toEqual(expected);
     });
   });
+
+  describe("month", () => {
+    it("指定された範囲の月範囲を正しく計算する", () => {
+      const targetDate = dayjs("2025-04-30");
+      const range = 2;
+
+      // 関数を実行
+      const result = getDateRange("month", targetDate, range);
+
+      // 期待される結果
+      const expected = ["2025-03", "2025-04"];
+
+      // 検証
+      expect(result).toEqual(expected);
+    });
+
+    it("月をまたぐ範囲を正しく計算する", () => {
+      const targetDate = dayjs("2025-01-10");
+      const range = 3;
+
+      const result = getDateRange("month", targetDate, range);
+
+      const expected = ["2024-11", "2024-12", "2025-01"];
+
+      expect(result).toEqual(expected);
+    });
+
+    it("範囲が1の場合、同じ月だけが含まれる", () => {
+      const targetDate = dayjs("2025-04-30");
+      const range = 1;
+
+      const result = getDateRange("month", targetDate, range);
+
+      const expected = ["2025-04"];
+
+      expect(result).toEqual(expected);
+    });
+  });
 });

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import dayjs from "dayjs";
-import { getDateRange } from "../../src/util/dateRange";
+import { getDateRange } from "../src/dateRange";
 
 describe("getDateRange", () => {
   describe("day", () => {

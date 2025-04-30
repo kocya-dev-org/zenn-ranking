@@ -79,5 +79,9 @@ jobs:
       - name: ビルドの実行
         run: npm run build -w cdk
       
+      # webappのビルドを実行してdistディレクトリを作成
+      - name: webappのビルド実行
+        run: npm run build -w webapp
+      
       - name: CDK Synthの実行
         run: npm run synth -w cdk

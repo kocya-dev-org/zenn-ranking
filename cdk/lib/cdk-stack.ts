@@ -56,7 +56,7 @@ export class CdkStack extends cdk.Stack {
 
     const apiHandlerLogGroup = new logs.LogGroup(this, `${PREFIX}-api-handler-logs`, {
       logGroupName: `/aws/lambda/${PREFIX}-api-handler`,
-      retention: logs.RetentionDays.ONE_MONTH,
+      retention: logs.RetentionDays.TWO_WEEKS,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
@@ -77,7 +77,7 @@ export class CdkStack extends cdk.Stack {
 
     const batchHandlerLogGroup = new logs.LogGroup(this, `${PREFIX}-batch-handler-logs`, {
       logGroupName: `/aws/lambda/${PREFIX}-batch-handler`,
-      retention: logs.RetentionDays.ONE_MONTH,
+      retention: logs.RetentionDays.TWO_WEEKS,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
@@ -109,7 +109,7 @@ export class CdkStack extends cdk.Stack {
 
     const apiLogGroup = new logs.LogGroup(this, `${PREFIX}-api-logs`, {
       logGroupName: `/aws/apigateway/${PREFIX}-api`,
-      retention: logs.RetentionDays.ONE_MONTH,
+      retention: logs.RetentionDays.TWO_WEEKS,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 

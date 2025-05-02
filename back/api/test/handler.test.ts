@@ -30,37 +30,37 @@ describe("handler", () => {
     vi.clearAllMocks();
   });
 
-  it("should return 400 for invalid unit parameter", async () => {
+  it("無効なunitパラメータの場合は400を返す", async () => {
     const event = createMockEvent({
       unit: "invalid",
       range: "7",
     });
     const result = await handler(event);
     expect(result.statusCode).toBe(400);
-    expect(JSON.parse(result.body)).toEqual({ message: "Invalid query parameters" });
+    expect(JSON.parse(result.body)).toEqual({ message: "無効なクエリパラメータです" });
   });
 
-  it("should return 400 for invalid range parameter", async () => {
+  it("無効なrangeパラメータの場合は400を返す", async () => {
     const event = createMockEvent({
       unit: "daily",
       range: "0", // Less than minimum
     });
     const result = await handler(event);
     expect(result.statusCode).toBe(400);
-    expect(JSON.parse(result.body)).toEqual({ message: "Invalid query parameters" });
+    expect(JSON.parse(result.body)).toEqual({ message: "無効なクエリパラメータです" });
   });
 
-  it("should return 400 for range parameter exceeding maximum", async () => {
+  it("rangeパラメータが最大値を超える場合は400を返す", async () => {
     const event = createMockEvent({
       unit: "daily",
       range: "32", // More than maximum
     });
     const result = await handler(event);
     expect(result.statusCode).toBe(400);
-    expect(JSON.parse(result.body)).toEqual({ message: "Invalid query parameters" });
+    expect(JSON.parse(result.body)).toEqual({ message: "無効なクエリパラメータです" });
   });
 
-  it("should return 200 with empty data when no items found", async () => {
+  it("アイテムが見つからない場合は空のデータで200を返す", async () => {
     dynamoDBMock.on(GetItemCommand).resolves({
       Item: undefined,
     });
@@ -74,7 +74,7 @@ describe("handler", () => {
     expect(JSON.parse(result.body)).toEqual({ data: [] });
   });
 
-  it("should return 200 with ranking data for daily unit", async () => {
+  it("日次単位のランキングデータの場合は200を返す", async () => {
     const today = dayjs().format("YYYY-MM-DD");
     
     const sampleArticle = {
@@ -114,7 +114,7 @@ describe("handler", () => {
     expect(responseBody.data[0].articles[0].id).toBe(12345);
   });
 
-  it("should return 500 when DynamoDB client throws an error", async () => {
+  it("DynamoDBクライアントがエラーをスローする場合は500を返す", async () => {
     dynamoDBMock.on(GetItemCommand).rejects(new Error("DynamoDB error"));
 
     const event = createMockEvent({
@@ -124,6 +124,6 @@ describe("handler", () => {
     
     const result = await handler(event);
     expect(result.statusCode).toBe(500);
-    expect(JSON.parse(result.body)).toEqual({ message: "Internal server error" });
+    expect(JSON.parse(result.body)).toEqual({ message: "内部サーバーエラー" });
   });
 });

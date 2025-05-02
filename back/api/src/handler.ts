@@ -32,9 +32,9 @@ const VALID_PARAMS = {
 };
 
 /**
- * API handler to retrieve ranking data from DynamoDB
+ * DynamoDBからランキングデータを取得するAPIハンドラー
  * @param event APIGatewayProxyEvent
- * @returns Response with ranking data or error message
+ * @returns ランキングデータまたはエラーメッセージを含むレスポンス
  */
 export const handler = async (event: APIGatewayProxyEvent) => {
   try {
@@ -43,7 +43,7 @@ export const handler = async (event: APIGatewayProxyEvent) => {
     if (!params) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ message: "Invalid query parameters" }),
+        body: JSON.stringify({ message: "無効なクエリパラメータです" }),
       };
     }
 
@@ -54,18 +54,18 @@ export const handler = async (event: APIGatewayProxyEvent) => {
       body: JSON.stringify({ data }),
     };
   } catch (error) {
-    console.error("Error in handler:", error);
+    console.error("ハンドラーでエラーが発生しました:", error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ message: "Internal server error" }),
+      body: JSON.stringify({ message: "内部サーバーエラー" }),
     };
   }
 };
 
 /**
- * Parse and validate query parameters
- * @param queryParams Query parameters from the request
- * @returns Validated parameters or null if validation fails
+ * クエリパラメータの解析とバリデーション
+ * @param queryParams リクエストからのクエリパラメータ
+ * @returns バリデーション済みのパラメータ、または失敗した場合はnull
  */
 interface RankingQueryParams {
   count: number;
@@ -81,22 +81,22 @@ function parseQueryParameters(queryParams: Record<string, string | undefined>): 
   const range = queryParams.range ? parseInt(queryParams.range, 10) : 0;
 
   if (!VALID_PARAMS.count.includes(count)) {
-    console.error(`Invalid count parameter: ${count}`);
+    console.error(`無効なcountパラメータ: ${count}`);
     return null;
   }
 
   if (!VALID_PARAMS.order.includes(order)) {
-    console.error(`Invalid order parameter: ${order}`);
+    console.error(`無効なorderパラメータ: ${order}`);
     return null;
   }
 
   if (!VALID_PARAMS.unit.includes(unit)) {
-    console.error(`Invalid unit parameter: ${unit}`);
+    console.error(`無効なunitパラメータ: ${unit}`);
     return null;
   }
 
   if (range < VALID_PARAMS.range.min || range > VALID_PARAMS.range.max) {
-    console.error(`Invalid range parameter: ${range}`);
+    console.error(`無効なrangeパラメータ: ${range}`);
     return null;
   }
 
@@ -104,10 +104,10 @@ function parseQueryParameters(queryParams: Record<string, string | undefined>): 
 }
 
 /**
- * Generate date keys for the given unit and range
- * @param unit Time unit (daily, weekly, monthly)
- * @param range Number of units to retrieve
- * @returns Array of date keys
+ * 指定された単位と範囲に基づいて日付キーを生成
+ * @param unit 時間単位（日次、週次、月次）
+ * @param range 取得する単位数
+ * @returns 日付キーの配列
  */
 function generateDateKeys(unit: "daily" | "weekly" | "monthly", range: number): string[] {
   const keys: string[] = [];
@@ -134,9 +134,9 @@ function generateDateKeys(unit: "daily" | "weekly" | "monthly", range: number): 
 }
 
 /**
- * Fetch ranking data from DynamoDB for the given parameters
- * @param params Validated query parameters
- * @returns Array of ranking data objects
+ * 指定されたパラメータに基づいてDynamoDBからランキングデータを取得
+ * @param params バリデーション済みのクエリパラメータ
+ * @returns ランキングデータオブジェクトの配列
  */
 async function fetchRankingData(params: RankingQueryParams) {
   const { unit, range } = params;
@@ -156,7 +156,7 @@ async function fetchRankingData(params: RankingQueryParams) {
         const response = await dynamoDBClient.send(command);
         
         if (!response.Item || !response.Item.contents || !response.Item.contents.S) {
-          console.log(`No data found for key: ${key}`);
+          console.log(`キー: ${key} に対するデータが見つかりません`);
           return null;
         }
 
@@ -167,7 +167,7 @@ async function fetchRankingData(params: RankingQueryParams) {
           articles: content.articles || [],
         };
       } catch (error) {
-        console.error(`Error fetching data for key ${key}:`, error);
+        console.error(`キー ${key} のデータ取得中にエラーが発生しました:`, error);
         throw error;
       }
     });
@@ -175,7 +175,7 @@ async function fetchRankingData(params: RankingQueryParams) {
     const results = await Promise.all(promises);
     return results.filter((result): result is { key: string; articles: unknown[] } => result !== null);
   } catch (error) {
-    console.error("Error in fetchRankingData:", error);
+    console.error("fetchRankingDataでエラーが発生しました:", error);
     throw error;
   }
 }

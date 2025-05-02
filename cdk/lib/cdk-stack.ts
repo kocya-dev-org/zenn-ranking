@@ -10,6 +10,7 @@ import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as events from "aws-cdk-lib/aws-events";
 import * as targets from "aws-cdk-lib/aws-events-targets";
 import * as iam from "aws-cdk-lib/aws-iam";
+import * as logs from "aws-cdk-lib/aws-logs";
 
 export class CdkStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -53,6 +54,12 @@ export class CdkStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
+    const apiHandlerLogGroup = new logs.LogGroup(this, `${PREFIX}-api-handler-logs`, {
+      logGroupName: `/aws/lambda/${PREFIX}-api-handler`,
+      retention: logs.RetentionDays.TWO_WEEKS,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
     const apiHandler = new lambda.Function(this, `${PREFIX}-api-handler`, {
       runtime: lambda.Runtime.NODEJS_20_X,
       code: lambda.Code.fromAsset("../back/api"),
@@ -63,7 +70,15 @@ export class CdkStack extends cdk.Stack {
         DAILY_TABLE_NAME: dailyTable.tableName,
         WEEKLY_TABLE_NAME: weeklyTable.tableName,
         MONTHLY_TABLE_NAME: monthlyTable.tableName,
+        LOG_LEVEL: 'INFO',
       },
+      logGroup: apiHandlerLogGroup,
+    });
+
+    const batchHandlerLogGroup = new logs.LogGroup(this, `${PREFIX}-batch-handler-logs`, {
+      logGroupName: `/aws/lambda/${PREFIX}-batch-handler`,
+      retention: logs.RetentionDays.TWO_WEEKS,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
     const batchHandler = new lambda.Function(this, `${PREFIX}-batch-handler`, {
@@ -77,7 +92,9 @@ export class CdkStack extends cdk.Stack {
         DAILY_TABLE_NAME: dailyTable.tableName,
         WEEKLY_TABLE_NAME: weeklyTable.tableName,
         MONTHLY_TABLE_NAME: monthlyTable.tableName,
+        LOG_LEVEL: 'INFO',
       },
+      logGroup: batchHandlerLogGroup,
     });
 
     dailyTable.grantReadWriteData(apiHandler);
@@ -90,8 +107,20 @@ export class CdkStack extends cdk.Stack {
 
     dataBucket.grantReadWrite(batchHandler);
 
+    const apiLogGroup = new logs.LogGroup(this, `${PREFIX}-api-logs`, {
+      logGroupName: `/aws/apigateway/${PREFIX}-api`,
+      retention: logs.RetentionDays.TWO_WEEKS,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
     const api = new apigateway.RestApi(this, `${PREFIX}-api`, {
       restApiName: `${PREFIX}-api`,
+      deployOptions: {
+        accessLogDestination: new apigateway.LogGroupLogDestination(apiLogGroup),
+        accessLogFormat: apigateway.AccessLogFormat.jsonWithStandardFields(),
+        loggingLevel: apigateway.MethodLoggingLevel.INFO,
+        dataTraceEnabled: true,
+      },
       defaultCorsPreflightOptions: {
         allowOrigins: apigateway.Cors.ALL_ORIGINS,
         allowMethods: apigateway.Cors.ALL_METHODS,

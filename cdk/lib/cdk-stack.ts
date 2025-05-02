@@ -145,6 +145,7 @@ export class CdkStack extends cdk.Stack {
         allowOrigins: apigateway.Cors.ALL_ORIGINS,
         allowMethods: apigateway.Cors.ALL_METHODS,
       },
+      cloudWatchRole: true,
     });
 
     const apiResource = api.root.addResource(API_PATH);

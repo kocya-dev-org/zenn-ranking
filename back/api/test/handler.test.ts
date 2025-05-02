@@ -28,6 +28,13 @@ describe("handler", () => {
   beforeEach(() => {
     dynamoDBMock.reset();
     vi.clearAllMocks();
+    
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2025-05-02"));
+  });
+  
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("無効なunitパラメータの場合は400を返す", async () => {

@@ -43,7 +43,7 @@ export const handler = async (event: APIGatewayProxyEvent) => {
     if (!params) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ message: "無効なクエリパラメータです" }),
+        body: JSON.stringify({ message: "Invalid query parameters" }),
       };
     }
 
@@ -54,10 +54,10 @@ export const handler = async (event: APIGatewayProxyEvent) => {
       body: JSON.stringify({ data }),
     };
   } catch (error) {
-    console.error("ハンドラーでエラーが発生しました:", error);
+    console.error("Error in handler:", error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ message: "内部サーバーエラー" }),
+      body: JSON.stringify({ message: "Internal server error" }),
     };
   }
 };
@@ -81,22 +81,22 @@ function parseQueryParameters(queryParams: Record<string, string | undefined>): 
   const range = queryParams.range ? parseInt(queryParams.range, 10) : 0;
 
   if (!VALID_PARAMS.count.includes(count)) {
-    console.error(`無効なcountパラメータ: ${count}`);
+    console.error(`Invalid count parameter: ${count}`);
     return null;
   }
 
   if (!VALID_PARAMS.order.includes(order)) {
-    console.error(`無効なorderパラメータ: ${order}`);
+    console.error(`Invalid order parameter: ${order}`);
     return null;
   }
 
   if (!VALID_PARAMS.unit.includes(unit)) {
-    console.error(`無効なunitパラメータ: ${unit}`);
+    console.error(`Invalid unit parameter: ${unit}`);
     return null;
   }
 
   if (range < VALID_PARAMS.range.min || range > VALID_PARAMS.range.max) {
-    console.error(`無効なrangeパラメータ: ${range}`);
+    console.error(`Invalid range parameter: ${range}`);
     return null;
   }
 
@@ -156,7 +156,7 @@ async function fetchRankingData(params: RankingQueryParams) {
         const response = await dynamoDBClient.send(command);
         
         if (!response.Item || !response.Item.contents || !response.Item.contents.S) {
-          console.log(`キー: ${key} に対するデータが見つかりません`);
+          console.log(`No data found for key: ${key}`);
           return null;
         }
 
@@ -167,7 +167,7 @@ async function fetchRankingData(params: RankingQueryParams) {
           articles: content.articles || [],
         };
       } catch (error) {
-        console.error(`キー ${key} のデータ取得中にエラーが発生しました:`, error);
+        console.error(`Error fetching data for key ${key}:`, error);
         throw error;
       }
     });
@@ -175,7 +175,7 @@ async function fetchRankingData(params: RankingQueryParams) {
     const results = await Promise.all(promises);
     return results.filter((result): result is { key: string; articles: unknown[] } => result !== null);
   } catch (error) {
-    console.error("fetchRankingDataでエラーが発生しました:", error);
+    console.error("Error in fetchRankingData:", error);
     throw error;
   }
 }

@@ -44,7 +44,7 @@ describe("handler", () => {
     });
     const result = await handler(event);
     expect(result.statusCode).toBe(400);
-    expect(JSON.parse(result.body)).toEqual({ message: "無効なクエリパラメータです" });
+    expect(JSON.parse(result.body)).toEqual({ message: "Invalid query parameters" });
   });
 
   it("無効なrangeパラメータの場合は400を返す", async () => {
@@ -54,7 +54,7 @@ describe("handler", () => {
     });
     const result = await handler(event);
     expect(result.statusCode).toBe(400);
-    expect(JSON.parse(result.body)).toEqual({ message: "無効なクエリパラメータです" });
+    expect(JSON.parse(result.body)).toEqual({ message: "Invalid query parameters" });
   });
 
   it("rangeパラメータが最大値を超える場合は400を返す", async () => {
@@ -64,7 +64,7 @@ describe("handler", () => {
     });
     const result = await handler(event);
     expect(result.statusCode).toBe(400);
-    expect(JSON.parse(result.body)).toEqual({ message: "無効なクエリパラメータです" });
+    expect(JSON.parse(result.body)).toEqual({ message: "Invalid query parameters" });
   });
 
   it("アイテムが見つからない場合は空のデータで200を返す", async () => {
@@ -131,6 +131,6 @@ describe("handler", () => {
     
     const result = await handler(event);
     expect(result.statusCode).toBe(500);
-    expect(JSON.parse(result.body)).toEqual({ message: "内部サーバーエラー" });
+    expect(JSON.parse(result.body)).toEqual({ message: "Internal server error" });
   });
 });

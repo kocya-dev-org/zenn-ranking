@@ -10,7 +10,18 @@ import timezone from "dayjs/plugin/timezone";
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import { mockClient } from "aws-sdk-client-mock";
-import { handler, fetchArticlesByDate, saveArticlesToS3, getStartDayOfPreviousWeek, processArticlesForDate, MAX_API_CALLS, readArticlesFromS3, saveArticlesToDynamoDB, snakeToCamel, convertKeysToCamelCase } from "../src/batchHandler";
+import {
+  handler,
+  fetchArticlesByDate,
+  saveArticlesToS3,
+  getStartDayOfPreviousWeek,
+  processArticlesForDate,
+  MAX_API_CALLS,
+  readArticlesFromS3,
+  saveArticlesToDynamoDB,
+  snakeToCamel,
+  convertKeysToCamelCase,
+} from "../src/batchHandler";
 import { APIGatewayProxyEvent } from "aws-lambda";
 
 dayjs.extend(utc);
@@ -31,15 +42,14 @@ const mockedAxios = axios as any;
 
 const s3Mock = mockClient(S3Client);
 const dynamoDbMock = mockClient(DynamoDBClient);
-
 /*
-describe("batchHandler", () => {
+describe("batchHandler-raw", () => {
   describe("handler", () => {
     it("should return a response with status code", async () => {
       // 簡単なテストケース - 実際の実装はモックせずに基本的な動作のみ確認
       const event = {} as APIGatewayProxyEvent;
       const result = await handler(event);
-      
+
       expect(result).toHaveProperty("statusCode");
       expect(result).toHaveProperty("body");
     });
@@ -61,9 +71,9 @@ describe("batchHandler", () => {
     it("前日から1週間前の日付を返す", () => {
       const result = getStartDayOfPreviousWeek();
       const now = dayjs().tz("Asia/Tokyo");
-      const diff = now.diff(result, 'day');
+      const diff = now.diff(result, "day");
       expect(diff).toBe(7);
-      
+
       expect(result.hour()).toBe(0);
       expect(result.minute()).toBe(0);
       expect(result.second()).toBe(0);
@@ -170,7 +180,6 @@ describe("batchHandler", () => {
     it("記事をS3に保存する", async () => {
       s3Mock.on(PutObjectCommand).resolves({});
 
-
       const articles = [{ id: 1, title: "Article 1", published_at: "2025-04-29T12:00:00+09:00", liked_count: 10 }] as any;
 
       const result = await saveArticlesToS3(articles, dayjs("2025-04-29"));
@@ -188,7 +197,6 @@ describe("batchHandler", () => {
 
     it("環境変数が設定されていない場合はエラーを返す", async () => {
       delete process.env.DATA_BUCKET_NAME;
-
 
       const articles = [{ id: 1, title: "Article 1", published_at: "2025-04-29T12:00:00+09:00", liked_count: 10 }] as any;
       const result = await saveArticlesToS3(articles, dayjs("2025-04-29"));
@@ -212,24 +220,18 @@ describe("batchHandler", () => {
         snake_case: "value",
         nested_object: {
           another_key: "value",
-          third_key: "value"
+          third_key: "value",
         },
-        array_key: [
-          { item_key: "value" },
-          { another_item_key: "value" }
-        ]
+        array_key: [{ item_key: "value" }, { another_item_key: "value" }],
       };
 
       const expected = {
         snakeCase: "value",
         nestedObject: {
           anotherKey: "value",
-          thirdKey: "value"
+          thirdKey: "value",
         },
-        arrayKey: [
-          { itemKey: "value" },
-          { anotherItemKey: "value" }
-        ]
+        arrayKey: [{ itemKey: "value" }, { anotherItemKey: "value" }],
       };
 
       const result = convertKeysToCamelCase(input);
@@ -241,14 +243,13 @@ describe("batchHandler", () => {
     it("S3から記事データを読み込む", async () => {
       const mockArticles = [
         { id: 1, title: "Article 1", published_at: "2025-04-29T12:00:00+09:00", liked_count: 10 },
-        { id: 2, title: "Article 2", published_at: "2025-04-29T14:00:00+09:00", liked_count: 5 }
+        { id: 2, title: "Article 2", published_at: "2025-04-29T14:00:00+09:00", liked_count: 5 },
       ];
-
 
       s3Mock.on(GetObjectCommand).resolves({
         Body: {
-          transformToString: () => Promise.resolve(JSON.stringify(mockArticles))
-        } as any
+          transformToString: () => Promise.resolve(JSON.stringify(mockArticles)),
+        } as any,
       });
 
       const result = await readArticlesFromS3(dayjs("2025-04-29"));
@@ -274,10 +275,21 @@ describe("batchHandler", () => {
     it("記事データをDynamoDBに保存する", async () => {
       dynamoDbMock.on(PutItemCommand).resolves({});
 
-
       const articles = [
-        { id: 1, title: "Article 1", published_at: "2025-04-29T12:00:00+09:00", liked_count: 10, user: { id: 1, username: "user1", name: "User 1", avatar_small_url: "url1" } },
-        { id: 2, title: "Article 2", published_at: "2025-04-29T14:00:00+09:00", liked_count: 5, user: { id: 2, username: "user2", name: "User 2", avatar_small_url: "url2" } }
+        {
+          id: 1,
+          title: "Article 1",
+          published_at: "2025-04-29T12:00:00+09:00",
+          liked_count: 10,
+          user: { id: 1, username: "user1", name: "User 1", avatar_small_url: "url1" },
+        },
+        {
+          id: 2,
+          title: "Article 2",
+          published_at: "2025-04-29T14:00:00+09:00",
+          liked_count: 5,
+          user: { id: 2, username: "user2", name: "User 2", avatar_small_url: "url2" },
+        },
       ] as any;
 
       const result = await saveArticlesToDynamoDB(articles, dayjs("2025-04-29"));
@@ -320,11 +332,14 @@ describe("batchHandler", () => {
 
       s3Mock.on(GetObjectCommand).resolves({
         Body: {
-          transformToString: () => Promise.resolve(JSON.stringify([
-            { id: 1, title: "Article 1", published_at: "2025-04-29T12:00:00+09:00", liked_count: 10 },
-            { id: 3, title: "Article 3", published_at: "2025-04-28T10:00:00+09:00", liked_count: 5 },
-          ]))
-        } as any
+          transformToString: () =>
+            Promise.resolve(
+              JSON.stringify([
+                { id: 1, title: "Article 1", published_at: "2025-04-29T12:00:00+09:00", liked_count: 10 },
+                { id: 3, title: "Article 3", published_at: "2025-04-28T10:00:00+09:00", liked_count: 5 },
+              ])
+            ),
+        } as any,
       });
       dynamoDbMock.on(PutItemCommand).resolves({});
 
@@ -344,7 +359,7 @@ describe("batchHandler", () => {
       });
       s3Mock.on(PutObjectCommand).resolves({});
       dynamoDbMock.on(PutItemCommand).resolves({});
-      
+
       const result = await processArticlesForDate(dayjs("2025-04-23"), dayjs("2025-04-29T23:59:59+09:00"));
 
       expect(result).toBe(true);
@@ -371,11 +386,14 @@ describe("batchHandler", () => {
 
       s3Mock.on(GetObjectCommand).resolves({
         Body: {
-          transformToString: () => Promise.resolve(JSON.stringify([
-            { id: 1, title: "Article 1", published_at: "2025-04-29T12:00:00+09:00", liked_count: 10 },
-            { id: 3, title: "Article 3", published_at: "2025-04-28T10:00:00+09:00", liked_count: 5 },
-          ]))
-        } as any
+          transformToString: () =>
+            Promise.resolve(
+              JSON.stringify([
+                { id: 1, title: "Article 1", published_at: "2025-04-29T12:00:00+09:00", liked_count: 10 },
+                { id: 3, title: "Article 3", published_at: "2025-04-28T10:00:00+09:00", liked_count: 5 },
+              ])
+            ),
+        } as any,
       });
       dynamoDbMock.on(PutItemCommand).resolves({});
 

@@ -81,8 +81,8 @@ export const fetchArticlesByDate = async (startDate: dayjs.Dayjs, endDate: dayjs
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const response: any = await axios.get(ARTICLES_ENDPOINT, {
         params: {
-          page,
-          count: 100, // 1ページあたりの取得件数 (最大100件)
+          page: `${page}`,
+          count: "100", // 1ページあたりの取得件数 (最大100件)
           order: "latest", // 最新順に取得
         },
       });
@@ -94,6 +94,7 @@ export const fetchArticlesByDate = async (startDate: dayjs.Dayjs, endDate: dayjs
         page = null;
         continue;
       }
+      console.log(`${response.data.articles.length} articles found on page ${page}`);
 
       for (const article of currentArticles) {
         const articleDate = dayjs(article.published_at).tz("Asia/Tokyo");
@@ -178,7 +179,7 @@ export const convertKeysToCamelCase = <T>(obj: unknown): T => {
   }
 
   if (Array.isArray(obj)) {
-    return obj.map(item => convertKeysToCamelCase(item)) as unknown as T;
+    return obj.map((item) => convertKeysToCamelCase(item)) as unknown as T;
   }
 
   const result: Record<string, unknown> = {};
@@ -246,28 +247,28 @@ export const readArticlesFromS3 = async (date: dayjs.Dayjs): Promise<Article[]> 
 export const saveArticlesToDynamoDB = async (articles: Article[], date: dayjs.Dayjs): Promise<boolean> => {
   try {
     const formattedDate = date.format("YYYY-MM-DD");
-    
+
     const sortedArticles = [...articles].sort((a, b) => b.liked_count - a.liked_count).slice(0, 30);
-    
+
     const camelCaseArticles: RankingArticle[] = convertKeysToCamelCase<RankingArticle[]>(sortedArticles);
-    
+
     const contentsObject = {
-      articles: camelCaseArticles
+      articles: camelCaseArticles,
     };
-    
+
     const tableName = process.env.DAILY_TABLE_NAME;
     if (!tableName) {
       throw new Error("DAILY_TABLE_NAME environment variable is not set");
     }
-    
+
     const command = new PutItemCommand({
       TableName: tableName,
       Item: {
         "yyyy-mm-dd": { S: formattedDate },
-        "contents": { S: JSON.stringify(contentsObject) }
-      }
+        contents: { S: JSON.stringify(contentsObject) },
+      },
     });
-    
+
     await dynamoDbClient.send(command);
     console.log(`Articles saved to DynamoDB: ${tableName} with key ${formattedDate}`);
     return true;
@@ -296,7 +297,7 @@ export const processArticlesForDate = async (startDate: dayjs.Dayjs, endDate: da
     if (!saveToS3Success) {
       return false;
     }
-    
+
     try {
       const savedArticles = await readArticlesFromS3(endDate);
       const saveToDynamoDBSuccess = await saveArticlesToDynamoDB(savedArticles, endDate);

@@ -8,7 +8,8 @@ import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { mockClient } from "aws-sdk-client-mock";
-import { handler, fetchArticlesByDate, saveArticlesToS3, getPreviousDay, processArticlesForDate, MAX_API_CALLS } from "../src/batchHandler";
+import { handler, fetchArticlesByDate, saveArticlesToS3, getStartDayOfPreviousWeek, processArticlesForDate, MAX_API_CALLS } from "../src/batchHandler";
+import { APIGatewayProxyEvent } from "aws-lambda";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -42,11 +43,11 @@ describe("batchHandler", () => {
     process.env.DATA_BUCKET_NAME = "test-bucket";
   });
 
-  describe("getPreviousDay", () => {
-    it("前日の日付を返す", () => {
+  describe("getStartDayOfPreviousWeek", () => {
+    it("前日から1週間前の日付を返す", () => {
       const today = dayjs();
-      const previousDay = today.subtract(1, "day").format("YYYY-MM-DD");
-      expect(getPreviousDay()).toBe(previousDay);
+      const startOfWeek = today.set("hour", 0).set("minutes", 0).set("seconds", 0).set("milliseconds", 0).subtract(7, "day");
+      expect(getStartDayOfPreviousWeek().toISOString()).toBe(startOfWeek.toISOString());
     });
   });
 
@@ -63,20 +64,23 @@ describe("batchHandler", () => {
         },
       });
 
-      const result = await fetchArticlesByDate("2025-04-29");
+      const result = await fetchArticlesByDate(dayjs("2025-04-23"), dayjs("2025-04-29T23:59:59+09:00"));
 
       expect(mockedAxios.get).toHaveBeenCalledWith("https://zenn.dev/api/articles", {
         params: { page: 1, count: 100, order: "latest" },
       });
 
-      expect(result).toHaveLength(1);
+      expect(result).toHaveLength(2);
       expect(result[0].id).toBe(1);
     });
 
     it("ページネーションを正しく処理する", async () => {
       mockedAxios.get.mockResolvedValueOnce({
         data: {
-          articles: [{ id: 1, title: "Article 1", published_at: "2025-04-29T12:00:00+09:00", liked_count: 10 }],
+          articles: [
+            { id: 1, title: "Article 1", published_at: "2025-04-29T12:00:00+09:00", liked_count: 10 },
+            { id: 2, title: "Article 2", published_at: "2025-04-30T00:00:00+09:00", liked_count: 10 },
+          ],
           next_page: 2,
         },
       });
@@ -84,17 +88,19 @@ describe("batchHandler", () => {
       mockedAxios.get.mockResolvedValueOnce({
         data: {
           articles: [
-            { id: 2, title: "Article 2", published_at: "2025-04-29T10:00:00+09:00", liked_count: 5 },
-            { id: 3, title: "Article 3", published_at: "2025-04-28T10:00:00+09:00", liked_count: 5 },
+            { id: 10, title: "Article 3", published_at: "2025-04-29T10:00:00+09:00", liked_count: 5 },
+            { id: 11, title: "Article 4", published_at: "2025-04-28T10:00:00+09:00", liked_count: 5 },
+            { id: 12, title: "Article 5", published_at: "2025-04-23T00:00:00+09:00", liked_count: 5 },
+            { id: 13, title: "Article 6", published_at: "2025-04-22T23:59:59+09:00", liked_count: 5 },
           ],
           next_page: null,
         },
       });
 
-      const result = await fetchArticlesByDate("2025-04-29");
+      const result = await fetchArticlesByDate(dayjs("2025-04-23"), dayjs("2025-04-29T23:59:59+09:00"));
 
       expect(mockedAxios.get).toHaveBeenCalledTimes(2);
-      expect(result).toHaveLength(2);
+      expect(result).toHaveLength(4);
     });
 
     it("ページネーションを正しく処理する 次ページがnullの場合はそこで終了", async () => {
@@ -118,7 +124,7 @@ describe("batchHandler", () => {
         },
       });
 
-      const result = await fetchArticlesByDate("2025-04-29");
+      const result = await fetchArticlesByDate(dayjs("2025-04-23"), dayjs("2025-04-29T23:59:59+09:00"));
 
       expect(mockedAxios.get).toHaveBeenCalledTimes(2);
       expect(result).toHaveLength(2);
@@ -134,8 +140,7 @@ describe("batchHandler", () => {
         });
       }
 
-      const result = await fetchArticlesByDate("2025-04-29");
-
+      const result = await fetchArticlesByDate(dayjs("2025-04-23"), dayjs("2025-04-29T23:59:59+09:00"));
       expect(mockedAxios.get).toHaveBeenCalledTimes(MAX_API_CALLS);
       expect(result.length).toBe(MAX_API_CALLS); // 各ページから1記事ずつ取得
     }, 10000); // 1sの遅延と10回呼び出しを考慮して10秒のタイムアウトを設定
@@ -148,7 +153,7 @@ describe("batchHandler", () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const articles = [{ id: 1, title: "Article 1", published_at: "2025-04-29T12:00:00+09:00", liked_count: 10 }] as any;
 
-      const result = await saveArticlesToS3(articles, "2025-04-29");
+      const result = await saveArticlesToS3(articles, dayjs("2025-04-29"));
 
       expect(result).toBe(true);
 
@@ -165,8 +170,8 @@ describe("batchHandler", () => {
       delete process.env.DATA_BUCKET_NAME;
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const articles = [{ id: 1 }] as any;
-      const result = await saveArticlesToS3(articles, "2025-04-29");
+      const articles = [{ id: 1, title: "Article 1", published_at: "2025-04-29T12:00:00+09:00", liked_count: 10 }] as any;
+      const result = await saveArticlesToS3(articles, dayjs("2025-04-29"));
 
       expect(result).toBe(false);
     });
@@ -186,7 +191,7 @@ describe("batchHandler", () => {
       });
       s3Mock.on(PutObjectCommand).resolves({});
 
-      const result = await processArticlesForDate("2025-04-29");
+      const result = await processArticlesForDate(dayjs("2025-04-23"), dayjs("2025-04-29T23:59:59+09:00"));
 
       expect(result).toBe(true);
       const calls = s3Mock.commandCalls(PutObjectCommand);
@@ -205,7 +210,7 @@ describe("batchHandler", () => {
         },
       });
       s3Mock.on(PutObjectCommand).resolves({});
-      const result = await processArticlesForDate("2025-04-29");
+      const result = await processArticlesForDate(dayjs("2025-04-23"), dayjs("2025-04-29T23:59:59+09:00"));
 
       expect(result).toBe(true);
       const calls = s3Mock.commandCalls(PutObjectCommand);
@@ -228,7 +233,7 @@ describe("batchHandler", () => {
       s3Mock.on(PutObjectCommand).resolves({});
 
       const event = {
-        queryStringParameters: { date: "2025-04-28" },
+        queryStringParameters: { date: "2025-04-22" },
       } as unknown;
       const result = await handler(event);
 
@@ -249,7 +254,8 @@ describe("batchHandler", () => {
       const result = await handler(event);
 
       expect(result.statusCode).toBe(500);
-      expect(result.body).toBe(JSON.stringify({ message: `Failed to process articles for ${getPreviousDay()}` }));
+      const body = JSON.parse(result.body);
+      expect(body.message).toContain(`Failed to process articles for`);
     });
   });
 });

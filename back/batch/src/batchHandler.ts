@@ -38,11 +38,11 @@ interface Article {
 
 /**
  * 指定した日付の記事のみを取得する関数
- * @param targetDate 対象日付（YYYY-MM-DD形式）
+ * @param startDate 対象日付
+ * @param endDate 対象日付
  * @returns 記事データの配列
  */
-export const fetchArticlesByDate = async (targetDate: string): Promise<Article[]> => {
-  const targetDateObj = dayjs(targetDate);
+export const fetchArticlesByDate = async (startDate: dayjs.Dayjs, endDate: dayjs.Dayjs): Promise<Article[]> => {
   const articles: Article[] = [];
   let page: number | null = 1;
   let apiCallCount = 0;
@@ -79,14 +79,18 @@ export const fetchArticlesByDate = async (targetDate: string): Promise<Article[]
       }
 
       for (const article of currentArticles) {
-        const articleDate = dayjs(article.published_at).tz("Asia/Tokyo").format("YYYY-MM-DD");
+        const articleDate = dayjs(article.published_at).tz("Asia/Tokyo");
 
-        if (dayjs(articleDate).isBefore(targetDateObj)) {
+        if (articleDate.isBefore(startDate)) {
           page = null;
-          break;
+          continue;
+        }
+        // 終了日より後の記事はスキップ
+        if (articleDate.isAfter(endDate)) {
+          continue;
         }
 
-        if (articleDate === targetDate && article.liked_count > 0) {
+        if (article.liked_count > 0) {
           articles.push(article);
         }
       }
@@ -107,12 +111,13 @@ export const fetchArticlesByDate = async (targetDate: string): Promise<Article[]
  * @param date 対象日付（YYYY-MM-DD形式）
  * @returns 保存の成功・失敗
  */
-export const saveArticlesToS3 = async (articles: Article[], date: string): Promise<boolean> => {
+export const saveArticlesToS3 = async (articles: Article[], date: dayjs.Dayjs): Promise<boolean> => {
   try {
-    const dateParts = date.split("-");
+    const formattedDate = date.format("YYYY-MM-DD");
+    const dateParts = formattedDate.split("-");
     const year = dateParts[0];
     const month = dateParts[1];
-    const filename = `${date.replace(/-/g, "")}.json`;
+    const filename = `${formattedDate.replace(/-/g, "")}.json`;
     const key = `${year}/${month}/${filename}`;
 
     const bucketName = process.env.DATA_BUCKET_NAME;
@@ -137,30 +142,31 @@ export const saveArticlesToS3 = async (articles: Article[], date: string): Promi
 };
 
 /**
- * 前日の日付を取得する関数
- * @returns 前日の日付（YYYY-MM-DD形式）
+ * 1週間前の開始日を取得する関数
+ * @returns 前日から1週間前の日付
  */
-export const getPreviousDay = (): string => {
-  return dayjs().tz("Asia/Tokyo").subtract(1, "day").format("YYYY-MM-DD");
+export const getStartDayOfPreviousWeek = (): dayjs.Dayjs => {
+  return dayjs().tz("Asia/Tokyo").set("hour", 0).set("minutes", 0).set("seconds", 0).set("milliseconds", 0).subtract(7, "day");
 };
 
 /**
  * 特定の日付の記事を取得してS3に保存する関数
- * @param date 対象日付（YYYY-MM-DD形式）
+ * @param startDate 対象日付（YYYY-MM-DD形式）
+ * @param endDate 対象日付（YYYY-MM-DD形式）
  * @returns 処理の成功・失敗
  */
-export const processArticlesForDate = async (date: string): Promise<boolean> => {
+export const processArticlesForDate = async (startDate: dayjs.Dayjs, endDate: dayjs.Dayjs): Promise<boolean> => {
   try {
-    const articles = await fetchArticlesByDate(date);
-    console.log(`Fetched ${articles.length} articles for ${date}`);
+    const articles = await fetchArticlesByDate(startDate, endDate);
+    console.log(`Fetched ${articles.length} articles for ${startDate} ${endDate}`);
 
     if (articles.length <= 0) {
-      console.log(`No articles found for ${date}`);
+      console.log(`No articles found for ${startDate} ${endDate}`);
       return true;
     }
-    return await saveArticlesToS3(articles, date);
+    return await saveArticlesToS3(articles, endDate);
   } catch (error) {
-    console.error(`Error processing articles for ${date}:`, error);
+    console.error(`Error processing articles for ${startDate} ${endDate}:`, error);
     return false;
   }
 };
@@ -172,15 +178,16 @@ export const processArticlesForDate = async (date: string): Promise<boolean> => 
  */
 export const handler = async (event: APIGatewayProxyEvent) => {
   try {
-    const date = event.queryStringParameters?.date || getPreviousDay();
-    console.log(`Processing articles for date: ${date}`);
+    const startDate = dayjs(event.queryStringParameters?.date) || getStartDayOfPreviousWeek();
+    const endDate = dayjs(startDate).add(7, "day").subtract(1, "millisecond");
+    console.log(`Processing articles for date: ${startDate} ${endDate}`);
 
-    const success = await processArticlesForDate(date);
+    const success = await processArticlesForDate(startDate, endDate);
 
     return {
       statusCode: success ? 200 : 500,
       body: JSON.stringify({
-        message: success ? `Successfully processed articles for ${date}` : `Failed to process articles for ${date}`,
+        message: success ? `Successfully processed articles for ${startDate}` : `Failed to process articles for ${startDate}`,
       }),
     };
   } catch (error) {

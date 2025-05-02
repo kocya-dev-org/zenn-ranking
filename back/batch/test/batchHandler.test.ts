@@ -381,7 +381,7 @@ describe("batchHandler", () => {
 
       const event = {
         queryStringParameters: { date: "2025-04-22" },
-      } as any as APIGatewayProxyEvent;
+      } as unknown as APIGatewayProxyEvent;
       const result = await handler(event);
 
       expect(result.statusCode).toBe(200);

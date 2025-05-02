@@ -11,6 +11,7 @@ import * as events from "aws-cdk-lib/aws-events";
 import * as targets from "aws-cdk-lib/aws-events-targets";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as logs from "aws-cdk-lib/aws-logs";
+import * as nodejs from "aws-cdk-lib/aws-lambda-nodejs";
 
 export class CdkStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -60,17 +61,26 @@ export class CdkStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
-    const apiHandler = new lambda.Function(this, `${PREFIX}-api-handler`, {
+    const apiHandler = new nodejs.NodejsFunction(this, `${PREFIX}-api-handler`, {
       runtime: lambda.Runtime.NODEJS_20_X,
-      code: lambda.Code.fromAsset("../back/api"),
-      handler: "src/handler.handler",
+      entry: "../back/api/src/handler.ts",
       timeout: cdk.Duration.minutes(15),
       memorySize: 1024,
+      role: new iam.Role(this, `${PREFIX}-api-handler-role`, {
+        roleName: `${PREFIX}-api-role`,
+        assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com"),
+        managedPolicies: [
+          iam.ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaBasicExecutionRole"),
+          iam.ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaVPCAccessExecutionRole"),
+          iam.ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaDynamoDBExecutionRole"),
+          iam.ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaCloudWatchLogsExecutionRole"),
+        ],
+      }),
       environment: {
         DAILY_TABLE_NAME: dailyTable.tableName,
         WEEKLY_TABLE_NAME: weeklyTable.tableName,
         MONTHLY_TABLE_NAME: monthlyTable.tableName,
-        LOG_LEVEL: 'INFO',
+        LOG_LEVEL: "INFO",
       },
       logGroup: apiHandlerLogGroup,
     });
@@ -81,18 +91,28 @@ export class CdkStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
-    const batchHandler = new lambda.Function(this, `${PREFIX}-batch-handler`, {
+    const batchHandler = new nodejs.NodejsFunction(this, `${PREFIX}-batch-handler`, {
       runtime: lambda.Runtime.NODEJS_20_X,
-      code: lambda.Code.fromAsset("../back/batch"),
-      handler: "src/batchHandler.handler",
+      entry: "../back/batch/src/batchHandler.ts",
       timeout: cdk.Duration.minutes(15),
       memorySize: 1024,
+      role: new iam.Role(this, `${PREFIX}-batch-handler-role`, {
+        roleName: `${PREFIX}-batch-role`,
+        assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com"),
+        managedPolicies: [
+          iam.ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaBasicExecutionRole"),
+          iam.ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaVPCAccessExecutionRole"),
+          iam.ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaDynamoDBExecutionRole"),
+          iam.ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaS3ExecutionRole"),
+          iam.ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaCloudWatchLogsExecutionRole"),
+        ],
+      }),
       environment: {
         DATA_BUCKET_NAME: dataBucket.bucketName,
         DAILY_TABLE_NAME: dailyTable.tableName,
         WEEKLY_TABLE_NAME: weeklyTable.tableName,
         MONTHLY_TABLE_NAME: monthlyTable.tableName,
-        LOG_LEVEL: 'INFO',
+        LOG_LEVEL: "INFO",
       },
       logGroup: batchHandlerLogGroup,
     });
@@ -135,7 +155,7 @@ export class CdkStack extends cdk.Stack {
       schedule: events.Schedule.cron({ minute: "0", hour: "16", day: "*", month: "*", year: "*" }),
     });
     rule.addTarget(new targets.LambdaFunction(batchHandler));
-    
+
     batchHandler.grantInvoke(new iam.ServicePrincipal("events.amazonaws.com"));
 
     const distribution = new cloudfront.Distribution(this, `${PREFIX}-distribution`, {

@@ -73,7 +73,6 @@ export class CdkStack extends cdk.Stack {
           iam.ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaBasicExecutionRole"),
           iam.ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaVPCAccessExecutionRole"),
           iam.ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaDynamoDBExecutionRole"),
-          iam.ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaCloudWatchLogsExecutionRole"),
         ],
       }),
       environment: {
@@ -103,8 +102,7 @@ export class CdkStack extends cdk.Stack {
           iam.ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaBasicExecutionRole"),
           iam.ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaVPCAccessExecutionRole"),
           iam.ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaDynamoDBExecutionRole"),
-          iam.ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaS3ExecutionRole"),
-          iam.ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaCloudWatchLogsExecutionRole"),
+          iam.ManagedPolicy.fromAwsManagedPolicyName("service-role/AmazonS3ObjectLambdaExecutionRolePolicy"),
         ],
       }),
       environment: {

@@ -1,6 +1,7 @@
 import { APIGatewayProxyEvent } from "aws-lambda";
 import axios from "axios";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
@@ -15,6 +16,7 @@ const ARTICLES_ENDPOINT = `${ZENN_API_BASE_URL}/articles`;
 export const MAX_API_CALLS = 10;
 
 const s3Client = new S3Client({ region: "ap-northeast-1" });
+const dynamoDbClient = new DynamoDBClient({ region: "ap-northeast-1" });
 
 interface Article {
   id: number;
@@ -34,6 +36,21 @@ interface Article {
     avatar_small_url: string;
   };
   [key: string]: unknown;
+}
+
+interface RankingArticle {
+  id: number;
+  title: string;
+  commentsCount: number;
+  likedCount: number;
+  articleType: string;
+  publishedAt: string;
+  user: {
+    id: number;
+    username: string;
+    name: string;
+    avatarSmallUrl: string;
+  };
 }
 
 /**
@@ -142,11 +159,122 @@ export const saveArticlesToS3 = async (articles: Article[], date: dayjs.Dayjs): 
 };
 
 /**
+ * snake_caseの文字列をcamelCaseに変換する関数
+ * @param str 変換する文字列
+ * @returns 変換後の文字列
+ */
+export const snakeToCamel = (str: string): string => {
+  return str.replace(/_([a-z])/g, (_, char) => char.toUpperCase());
+};
+
+/**
+ * オブジェクトのキーをsnake_caseからcamelCaseに変換する関数
+ * @param obj 変換するオブジェクト
+ * @returns 変換後のオブジェクト
+ */
+export const convertKeysToCamelCase = <T>(obj: unknown): T => {
+  if (obj === null || typeof obj !== "object") {
+    return obj as T;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(item => convertKeysToCamelCase(item)) as unknown as T;
+  }
+
+  const result: Record<string, unknown> = {};
+  for (const key in obj as Record<string, unknown>) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      const camelKey = snakeToCamel(key);
+      result[camelKey] = convertKeysToCamelCase((obj as Record<string, unknown>)[key]);
+    }
+  }
+  return result as T;
+};
+
+/**
  * 1週間前の開始日を取得する関数
  * @returns 前日から1週間前の日付
  */
 export const getStartDayOfPreviousWeek = (): dayjs.Dayjs => {
   return dayjs().tz("Asia/Tokyo").set("hour", 0).set("minutes", 0).set("seconds", 0).set("milliseconds", 0).subtract(7, "day");
+};
+
+/**
+ * S3から記事データを読み込む関数
+ * @param date 対象日付
+ * @returns 記事データの配列
+ */
+export const readArticlesFromS3 = async (date: dayjs.Dayjs): Promise<Article[]> => {
+  try {
+    const formattedDate = date.format("YYYY-MM-DD");
+    const dateParts = formattedDate.split("-");
+    const year = dateParts[0];
+    const month = dateParts[1];
+    const filename = `${formattedDate.replace(/-/g, "")}.json`;
+    const key = `${year}/${month}/${filename}`;
+
+    const bucketName = process.env.DATA_BUCKET_NAME;
+    if (!bucketName) {
+      throw new Error("DATA_BUCKET_NAME environment variable is not set");
+    }
+
+    const command = new GetObjectCommand({
+      Bucket: bucketName,
+      Key: key,
+    });
+
+    const response = await s3Client.send(command);
+    const body = await response.Body?.transformToString();
+    if (!body) {
+      throw new Error("No data returned from S3");
+    }
+
+    const articles: Article[] = JSON.parse(body);
+    return articles;
+  } catch (error) {
+    console.error(`Error reading articles from S3 for date ${date}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * 記事データをDynamoDBに保存する関数
+ * @param articles 保存する記事データの配列
+ * @param date 対象日付
+ * @returns 保存の成功・失敗
+ */
+export const saveArticlesToDynamoDB = async (articles: Article[], date: dayjs.Dayjs): Promise<boolean> => {
+  try {
+    const formattedDate = date.format("YYYY-MM-DD");
+    
+    const sortedArticles = [...articles].sort((a, b) => b.liked_count - a.liked_count).slice(0, 30);
+    
+    const camelCaseArticles: RankingArticle[] = convertKeysToCamelCase<RankingArticle[]>(sortedArticles);
+    
+    const contentsObject = {
+      articles: camelCaseArticles
+    };
+    
+    const tableName = process.env.DAILY_TABLE_NAME;
+    if (!tableName) {
+      throw new Error("DAILY_TABLE_NAME environment variable is not set");
+    }
+    
+    const command = new PutItemCommand({
+      TableName: tableName,
+      Item: {
+        "yyyy-mm-dd": { S: formattedDate },
+        "contents": { S: JSON.stringify(contentsObject) }
+      }
+    });
+    
+    await dynamoDbClient.send(command);
+    console.log(`Articles saved to DynamoDB: ${tableName} with key ${formattedDate}`);
+    return true;
+  } catch (error) {
+    console.error(`Error saving articles to DynamoDB for date ${date}:`, error);
+    return false;
+  }
 };
 
 /**
@@ -164,7 +292,19 @@ export const processArticlesForDate = async (startDate: dayjs.Dayjs, endDate: da
       console.log(`No articles found for ${startDate} ${endDate}`);
       return true;
     }
-    return await saveArticlesToS3(articles, endDate);
+    const saveToS3Success = await saveArticlesToS3(articles, endDate);
+    if (!saveToS3Success) {
+      return false;
+    }
+    
+    try {
+      const savedArticles = await readArticlesFromS3(endDate);
+      const saveToDynamoDBSuccess = await saveArticlesToDynamoDB(savedArticles, endDate);
+      return saveToDynamoDBSuccess;
+    } catch (error) {
+      console.error(`Error processing articles for DynamoDB ${startDate} ${endDate}:`, error);
+      return false;
+    }
   } catch (error) {
     console.error(`Error processing articles for ${startDate} ${endDate}:`, error);
     return false;

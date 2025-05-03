@@ -21,7 +21,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: 'dateSelected', index: number): void;
+  (e: "dateSelected", index: number): void;
 }>();
 
 const chartRef = ref<HTMLElement | null>(null);
@@ -32,11 +32,11 @@ const initChart = () => {
 
   chart = echarts.init(chartRef.value);
   updateChart();
-  
+
   // 日付選択のためのクリックイベントを追加
-  chart.on('click', (params) => {
+  chart.on("click", (params) => {
     // params.dataIndexはクリックされたデータポイントのインデックス
-    emit('dateSelected', params.dataIndex);
+    emit("dateSelected", params.dataIndex);
   });
 
   window.addEventListener("resize", handleResize);
@@ -55,7 +55,7 @@ const updateChart = () => {
   const series = topArticles.map((article) => {
     const seriesData = data.map((item) => {
       const found = item.articles.find((a) => a.id === article.id);
-      return found ? found.likedCount : 0;
+      return found ? found.likedCount : null;
     });
 
     return {
@@ -107,7 +107,7 @@ onMounted(initChart);
 onUnmounted(() => {
   window.removeEventListener("resize", handleResize);
   // クリックイベントリスナーを削除
-  chart?.off('click');
+  chart?.off("click");
   chart?.dispose();
 });
 </script>

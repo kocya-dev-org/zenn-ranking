@@ -49,7 +49,7 @@ const updateChart = () => {
     })
     
     return {
-      name: truncateTitle(article.title),
+      name: article.title,
       type: 'line',
       data: seriesData,
       smooth: true,

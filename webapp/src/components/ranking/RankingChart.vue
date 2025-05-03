@@ -83,6 +83,9 @@ const updateChart = () => {
   });
 
   const option = {
+    textStyle: {
+      fontFamily: "'Noto Sans JP', system-ui, Avenir, Helvetica, Arial, sans-serif"
+    },
     tooltip: {
       trigger: "axis",
       formatter: function (params: { axisValueLabel: string; color: string; seriesName: string; value: number }[]) {
@@ -105,6 +108,9 @@ const updateChart = () => {
       type: "scroll",
       orient: "horizontal",
       bottom: 0,
+      textStyle: {
+        fontFamily: "'Noto Sans JP', system-ui, Avenir, Helvetica, Arial, sans-serif"
+      }
     },
     grid: {
       left: "3%",

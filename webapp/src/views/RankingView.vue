@@ -1,28 +1,22 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted } from 'vue'
 import { getTrends } from '../feature/trends'
 import type { TrendData } from '../feature/trends'
 import RankingChart from '../components/ranking/RankingChart.vue'
 import RankingList from '../components/ranking/RankingList.vue'
 
-const activeTimeUnit = ref('daily')
+// activeTimeUnit ref removed as per Issue #32
 const trendData = ref<TrendData | null>(null)
 const loading = ref(true)
 
 const fetchData = async () => {
   loading.value = true
   try {
-    // 日: 7日分、週: 4週分、月: 12ヶ月分のデータを取得
-    const range = activeTimeUnit.value === 'daily' ? 7 : 
-                  activeTimeUnit.value === 'weekly' ? 4 : 12
+    // 日: 7日分のデータを取得
+    const range = 7
     
-    // trends.tsの関数は'day', 'week', 'month'を期待しているので変換
-    const unitMap = {
-      'daily': 'day',
-      'weekly': 'week',
-      'monthly': 'month'
-    }
-    const unit = unitMap[activeTimeUnit.value as keyof typeof unitMap]
+    // 常にdailyを使用する
+    const unit = 'day'
     
     trendData.value = await getTrends(unit, range)
   } catch (error) {
@@ -33,18 +27,11 @@ const fetchData = async () => {
 }
 
 onMounted(fetchData)
-watch(activeTimeUnit, fetchData)
 </script>
 
 <template>
   <div>
-    <div class="time-unit-selector">
-      <el-radio-group v-model="activeTimeUnit" size="large">
-        <el-radio-button label="daily">daily</el-radio-button>
-        <el-radio-button label="weekly">weekly</el-radio-button>
-        <el-radio-button label="monthly">monthly</el-radio-button>
-      </el-radio-group>
-    </div>
+    <!-- time-unit-selector has been removed as per Issue #32 -->
 
     <el-card class="chart-card">
       <template #header>
@@ -74,11 +61,7 @@ watch(activeTimeUnit, fetchData)
 </template>
 
 <style scoped>
-.time-unit-selector {
-  margin-bottom: 20px;
-  display: flex;
-  justify-content: center;
-}
+/* time-unit-selector CSS removed as per Issue #32 */
 .chart-card, .ranking-card {
   margin-bottom: 20px;
 }

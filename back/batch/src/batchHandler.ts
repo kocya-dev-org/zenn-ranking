@@ -96,13 +96,14 @@ export const fetchArticlesByDate = async (startDate: dayjs.Dayjs, endDate: dayjs
         page = null;
         continue;
       }
-      console.log(`${response.data.articles.length} articles found on page ${page}`);
 
+      let stopProcess: Boolean = false;
       for (const article of currentArticles) {
         const articleDate = dayjs(article.published_at).tz("Asia/Tokyo");
+        // 最新からソートしてあるので開始日以前の記事があれば以降は全て古い記事　→　処理を停止
         if (articleDate.isBefore(startDate)) {
-          page = null;
-          continue;
+          stopProcess = true;
+          break;
         }
         // 終了日より後の記事はスキップ
         if (articleDate.isAfter(endDate)) {
@@ -113,8 +114,9 @@ export const fetchArticlesByDate = async (startDate: dayjs.Dayjs, endDate: dayjs
           articles.push(article);
         }
       }
+      console.log(`${response.data.articles.length} articles found on page ${page}, total ${articles.length} articles`);
 
-      page = responseData?.next_page;
+      page = stopProcess ? null : responseData?.next_page;
     } catch (error) {
       console.error("Error fetching articles:", error);
       throw error;
@@ -197,8 +199,8 @@ export const convertKeysToCamelCase = <T>(obj: unknown): T => {
  * 1週間前の開始日を取得する関数
  * @returns 前日から1週間前の日付
  */
-export const getStartDayOfPreviousWeek = (): dayjs.Dayjs => {
-  return dayjs().tz("Asia/Tokyo").set("hour", 0).set("minutes", 0).set("seconds", 0).set("milliseconds", 0).subtract(7, "day");
+export const getStartDayOfPreviousWeek = (date: string): dayjs.Dayjs => {
+  return dayjs(date).tz("Asia/Tokyo").set("hour", 0).set("minutes", 0).set("seconds", 0).set("milliseconds", 0).subtract(7, "day");
 };
 
 /**
@@ -321,7 +323,7 @@ export const processArticlesForDate = async (startDate: dayjs.Dayjs, endDate: da
 export const handler = async (event: APIGatewayProxyEvent) => {
   try {
     console.log(`queryStringParameters.date = ${event.queryStringParameters?.date}`);
-    const startDate = getStartDayOfPreviousWeek();
+    const startDate = getStartDayOfPreviousWeek(event.queryStringParameters?.date || dayjs().format("YYYY-MM-DD"));
     const endDate = dayjs(startDate).add(7, "day").subtract(1, "millisecond");
     console.log(`Processing articles for date: ${startDate} ${endDate}`);
 

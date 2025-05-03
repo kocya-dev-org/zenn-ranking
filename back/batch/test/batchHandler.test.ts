@@ -131,7 +131,7 @@ describe("batchHandler", () => {
       const result = await fetchArticlesByDate(dayjs("2025-04-23"), dayjs("2025-04-29T23:59:59+09:00"));
 
       expect(mockedAxios.get).toHaveBeenCalledTimes(2);
-      expect(result).toHaveLength(3);
+      expect(result).toHaveLength(4);
     });
 
     it("ページネーションを正しく処理する 次ページがnullの場合はそこで終了", async () => {
@@ -403,7 +403,7 @@ describe("batchHandler", () => {
       dynamoDbMock.on(PutItemCommand).resolves({});
 
       const event = {
-        queryStringParameters: { date: "2025-04-22" },
+        queryStringParameters: { date: "2025-04-29" },
       } as unknown as APIGatewayProxyEvent;
       const result = await handler(event);
 

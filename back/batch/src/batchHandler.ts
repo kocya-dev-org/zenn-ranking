@@ -46,6 +46,7 @@ interface RankingArticle {
   likedCount: number;
   articleType: string;
   publishedAt: string;
+  slug: string;
   user: {
     id: number;
     username: string;

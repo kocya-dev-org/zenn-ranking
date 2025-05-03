@@ -172,7 +172,9 @@ async function fetchRankingData(params: RankingQueryParams) {
     });
 
     const results = await Promise.all(promises);
-    return results.filter((result): result is { key: string; articles: unknown[] } => result !== null);
+    return results
+      .filter((result): result is { key: string; articles: unknown[] } => result !== null)
+      .sort((a, b) => new Date(a.key).getTime() - new Date(b.key).getTime());
   } catch (error) {
     console.error("Error in fetchRankingData:", error);
     throw error;

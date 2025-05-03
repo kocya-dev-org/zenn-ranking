@@ -85,10 +85,10 @@ const updateChart = () => {
   const option = {
     tooltip: {
       trigger: "axis",
-      formatter: function (params: any) {
+      formatter: function (params: { axisValueLabel: string; color: string; seriesName: string; value: number }[]) {
         let tooltipContent = params[0].axisValueLabel + "<br/>";
 
-        params.forEach((param: any) => {
+        params.forEach((param: { color: string; seriesName: string; value: number | null }) => {
           if (param.value) {
             // シリーズの色からマーカーを作成
             const colorSpan = `<span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:${param.color};"></span>`;

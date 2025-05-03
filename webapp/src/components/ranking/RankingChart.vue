@@ -37,13 +37,16 @@ const updateChart = () => {
 
   const { data } = props.trendData;
 
+  // 日付を昇順（古い→新しい）にソート
+  const sortedData = [...data].sort((a, b) => a.key.localeCompare(b.key));
+
   // X軸のラベル（日付や週番号など）
-  const xAxisLabels = data.map((item) => item.key);
+  const xAxisLabels = sortedData.map((item) => item.key);
 
   // 上位10記事のデータを準備
-  const topArticles = data[0].articles.slice(0, 10);
+  const topArticles = sortedData[0].articles.slice(0, 10);
   const series = topArticles.map((article) => {
-    const seriesData = data.map((item) => {
+    const seriesData = sortedData.map((item) => {
       const found = item.articles.find((a) => a.id === article.id);
       return found ? found.likedCount : 0;
     });

@@ -50,16 +50,32 @@ const updateChart = () => {
   // X軸のラベル（日付や週番号など）
   const xAxisLabels = data.map((item) => item.key);
 
-  // 上位10記事のデータを準備
-  const topArticles = data[0].articles.slice(0, 10);
-  const series = topArticles.map((article) => {
+  //
+  // 全期間で出現する上位10記事のIDを収集
+  const allArticleIds = new Set();
+  data.forEach((dateData) => {
+    dateData.articles.slice(0, 10).forEach((article) => {
+      allArticleIds.add(article.id);
+    });
+  });
+  const series = Array.from(allArticleIds).map((articleId) => {
+    // 最初に出現する記事のタイトルを取得
+    let articleTitle = "";
+    for (const dateData of data) {
+      const found = dateData.articles.find((a) => a.id === articleId);
+      if (found) {
+        articleTitle = found.title;
+        break;
+      }
+    }
+
     const seriesData = data.map((item) => {
-      const found = item.articles.find((a) => a.id === article.id);
+      const found = item.articles.find((a) => a.id === articleId);
       return found ? found.likedCount : null;
     });
 
     return {
-      name: truncateTitle(article.title),
+      name: truncateTitle(articleTitle),
       type: "line",
       data: seriesData,
       smooth: true,
@@ -69,9 +85,23 @@ const updateChart = () => {
   const option = {
     tooltip: {
       trigger: "axis",
+      formatter: function (params: any) {
+        let tooltipContent = params[0].axisValueLabel + "<br/>";
+
+        params.forEach((param: any) => {
+          if (param.value) {
+            // シリーズの色からマーカーを作成
+            const colorSpan = `<span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:${param.color};"></span>`;
+            // マーカー、シリーズ名、いいね数を表示
+            tooltipContent += `${colorSpan}${param.seriesName} (${param.value})<br/>`;
+          }
+        });
+
+        return tooltipContent;
+      },
     },
     legend: {
-      data: topArticles.map((article) => truncateTitle(article.title)),
+      data: series.map((s) => s.name),
       type: "scroll",
       orient: "horizontal",
       bottom: 0,

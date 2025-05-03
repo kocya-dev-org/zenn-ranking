@@ -19,8 +19,8 @@ function createMockEvent(queryParams: Record<string, string> = {}): APIGatewayPr
     queryStringParameters: queryParams,
     multiValueQueryStringParameters: null,
     stageVariables: null,
-    requestContext: {} as APIGatewayProxyEvent['requestContext'],
-    resource: ""
+    requestContext: {} as APIGatewayProxyEvent["requestContext"],
+    resource: "",
   } as APIGatewayProxyEvent;
 }
 
@@ -28,11 +28,11 @@ describe("handler", () => {
   beforeEach(() => {
     dynamoDBMock.reset();
     vi.clearAllMocks();
-    
+
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2025-05-02"));
   });
-  
+
   afterEach(() => {
     vi.useRealTimers();
   });
@@ -83,7 +83,7 @@ describe("handler", () => {
 
   it("日次単位のランキングデータの場合は200を返す", async () => {
     const today = dayjs().format("YYYY-MM-DD");
-    
+
     const sampleArticle = {
       id: 12345,
       title: "Test Article",
@@ -93,12 +93,12 @@ describe("handler", () => {
       publishedAt: "2024-05-01T12:00:00.000Z",
       user: {
         id: 1,
-        userName: "testuser",
+        username: "testuser",
         name: "Test User",
         avatarSmallUrl: "https://example.com/avatar.png",
       },
     };
-    
+
     dynamoDBMock.on(GetItemCommand).resolves({
       Item: {
         "yyyy-mm-dd": { S: today },
@@ -110,10 +110,10 @@ describe("handler", () => {
       unit: "daily",
       range: "1",
     });
-    
+
     const result = await handler(event);
     expect(result.statusCode).toBe(200);
-    
+
     const responseBody = JSON.parse(result.body);
     expect(responseBody.data).toHaveLength(1);
     expect(responseBody.data[0].key).toBe(today);
@@ -128,7 +128,7 @@ describe("handler", () => {
       unit: "daily",
       range: "1",
     });
-    
+
     const result = await handler(event);
     expect(result.statusCode).toBe(500);
     expect(JSON.parse(result.body)).toEqual({ message: "Internal server error" });

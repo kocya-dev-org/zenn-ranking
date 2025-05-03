@@ -165,7 +165,7 @@ articles は実際には表示ランキング上位数に応じたデータが�
           "publishedAt": "2024-02-26T18:00:00.378+09:00",
           "user": {
             "id": 19167,
-            "userName": "kou_pg_0131",
+            "username": "kou_pg_0131",
             "name": "koki",
             "avatarSmallUrl": "https://lh3.googleusercontent.com/a-/AOh14Ghb4YGzhOmUME8kf5ygMCjAh9k1xKBO4KugU0LCAg=s96-c"
           }
@@ -184,7 +184,7 @@ articles は実際には表示ランキング上位数に応じたデータが�
           "publishedAt": "2023-03-20T19:10:50.194+09:00",
           "user": {
             "id": 19167,
-            "userName": "kou_pg_0131",
+            "username": "kou_pg_0131",
             "name": "koki",
             "avatarSmallUrl": "https://lh3.googleusercontent.com/a-/AOh14Ghb4YGzhOmUME8kf5ygMCjAh9k1xKBO4KugU0LCAg=s96-c"
           }

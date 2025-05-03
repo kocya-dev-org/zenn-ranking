@@ -2,13 +2,13 @@
  * ユーザーの基本的なプロフィール情報を表します。
  *
  * @property id - ユーザーの一意の識別子。
- * @property userName - ユーザー名またはハンドルネーム。
+ * @property username - ユーザー名またはハンドルネーム。
  * @property name - ユーザーのフルネーム。
  * @property avatarSmallUrl - ユーザーの小さいアバター画像のURL。
  */
 export type User = {
   id: number;
-  userName: string;
+  username: string;
   name: string;
   avatarSmallUrl: string;
 };
@@ -72,65 +72,65 @@ const apiCache: Record<CacheKey, CacheEntry> = {};
  */
 export const getTrends = async (unit: string, range: number): Promise<TrendData> => {
   console.log("getTrends", unit, range);
-  
+
   const unitMap: Record<string, string> = {
     day: "daily",
     week: "weekly",
-    month: "monthly"
+    month: "monthly",
   };
-  
+
   const cacheKey = `${unit}_${range}`;
-  
+
   const now = Date.now();
   const cachedData = apiCache[cacheKey];
-  if (cachedData && (now - cachedData.timestamp < 60 * 60 * 1000)) {
+  if (cachedData && now - cachedData.timestamp < 60 * 60 * 1000) {
     console.log("Using cached data for", unit, range);
     return cachedData.data;
   }
-  
+
   const domain = "dml3tkm972yby.cloudfront.net";
   const apiUrl = `https://${domain}/api/ranking`;
-  
+
   const params = new URLSearchParams({
     unit: unitMap[unit],
     range: range.toString(),
     count: "10",
-    order: "liked"
+    order: "liked",
   });
-  
+
   try {
     const response = await fetch(`${apiUrl}?${params.toString()}`);
-    
+
     if (!response.ok) {
       throw new Error(`API request failed with status ${response.status}`);
     }
-    
+
     const data: TrendData = await response.json();
-    
+
     if (data && data.data) {
-      data.data.forEach(unit => {
-        unit.articles.forEach(article => {
+      data.data.forEach((unit) => {
+        unit.articles.forEach((article) => {
           if (!article.slug) {
             article.slug = article.id.toString();
           }
         });
       });
     }
-    
+
     apiCache[cacheKey] = {
       timestamp: now,
-      data
+      data,
     };
-    
+
     return data;
   } catch (error) {
     console.error("Error fetching trend data:", error);
-    
+
     if (cachedData) {
       console.log("Using cached data after fetch error");
       return cachedData.data;
     }
-    
+
     return { data: [] };
   }
 };

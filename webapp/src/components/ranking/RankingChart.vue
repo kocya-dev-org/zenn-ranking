@@ -20,6 +20,10 @@ const props = defineProps<{
   trendData: TrendData;
 }>();
 
+const emit = defineEmits<{
+  (e: 'dateSelected', index: number): void;
+}>();
+
 const chartRef = ref<HTMLElement | null>(null);
 let chart: echarts.ECharts | null = null;
 
@@ -28,6 +32,12 @@ const initChart = () => {
 
   chart = echarts.init(chartRef.value);
   updateChart();
+  
+  // 日付選択のためのクリックイベントを追加
+  chart.on('click', (params) => {
+    // params.dataIndexはクリックされたデータポイントのインデックス
+    emit('dateSelected', params.dataIndex);
+  });
 
   window.addEventListener("resize", handleResize);
 };
@@ -96,6 +106,8 @@ watch(() => props.trendData, updateChart, { deep: true });
 onMounted(initChart);
 onUnmounted(() => {
   window.removeEventListener("resize", handleResize);
+  // クリックイベントリスナーを削除
+  chart?.off('click');
   chart?.dispose();
 });
 </script>

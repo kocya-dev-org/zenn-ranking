@@ -8,6 +8,7 @@ import RankingList from '../components/ranking/RankingList.vue'
 // activeTimeUnit ref removed as per Issue #32
 const trendData = ref<TrendData | null>(null)
 const loading = ref(true)
+const selectedDateIndex = ref<number | null>(null) // 選択された日付のインデックス
 
 const fetchData = async () => {
   loading.value = true
@@ -26,6 +27,11 @@ const fetchData = async () => {
   }
 }
 
+// チャートでの日付選択を処理するメソッド
+const handleDateSelected = (index: number) => {
+  selectedDateIndex.value = index
+}
+
 onMounted(fetchData)
 </script>
 
@@ -42,7 +48,7 @@ onMounted(fetchData)
       <div v-if="loading" class="loading">
         <el-skeleton :rows="6" animated />
       </div>
-      <RankingChart v-else-if="trendData" :trend-data="trendData" />
+      <RankingChart v-else-if="trendData" :trend-data="trendData" @date-selected="handleDateSelected" />
     </el-card>
 
     <el-card class="ranking-card">
@@ -55,7 +61,7 @@ onMounted(fetchData)
         <el-skeleton :rows="10" animated />
       </div>
       <RankingList v-else-if="trendData && trendData.data.length > 0" 
-                   :articles="trendData.data[trendData.data.length - 1].articles" />
+                   :articles="trendData.data[selectedDateIndex !== null ? selectedDateIndex : trendData.data.length - 1].articles" />
     </el-card>
   </div>
 </template>

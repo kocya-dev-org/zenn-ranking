@@ -157,6 +157,19 @@ export class CdkStack extends cdk.Stack {
 
     batchHandler.grantInvoke(new iam.ServicePrincipal("events.amazonaws.com"));
 
+    const apiCachePolicy = new cloudfront.CachePolicy(this, `${PREFIX}-api-cache-policy`, {
+      cachePolicyName: `${PREFIX}-api-cache-policy`,
+      comment: 'Cache policy for API requests',
+      defaultTtl: cdk.Duration.days(1),
+      minTtl: cdk.Duration.minutes(5),
+      maxTtl: cdk.Duration.days(1),
+      enableAcceptEncodingGzip: true,
+      enableAcceptEncodingBrotli: true,
+      queryStringBehavior: cloudfront.CacheQueryStringBehavior.allowList(
+        'count', 'order', 'unit', 'range'
+      ),
+    });
+
     const distribution = new cloudfront.Distribution(this, `${PREFIX}-distribution`, {
       defaultBehavior: {
         origin: new origins.S3Origin(webappBucket),
@@ -167,7 +180,7 @@ export class CdkStack extends cdk.Stack {
           origin: new origins.RestApiOrigin(api),
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
-          cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+          cachePolicy: apiCachePolicy, // カスタムキャッシュポリシーを適用
         },
       },
       defaultRootObject: "index.html",

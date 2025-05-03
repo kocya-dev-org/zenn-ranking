@@ -17,6 +17,7 @@ import {
   getStartDayOfPreviousWeek,
   processArticlesForDate,
   MAX_API_CALLS,
+  MAX_ARTICLES_COUNT,
   readArticlesFromS3,
   saveArticlesToDynamoDB,
   snakeToCamel,
@@ -97,7 +98,7 @@ describe("batchHandler", () => {
       const result = await fetchArticlesByDate(dayjs("2025-04-23"), dayjs("2025-04-29T23:59:59+09:00"));
 
       expect(mockedAxios.get).toHaveBeenCalledWith("https://zenn.dev/api/articles", {
-        params: { page: 1, count: 100, order: "latest" },
+        params: { page: "1", count: `${MAX_ARTICLES_COUNT}`, order: "latest" },
       });
 
       expect(result).toHaveLength(2);
@@ -160,20 +161,24 @@ describe("batchHandler", () => {
       expect(result).toHaveLength(2);
     });
 
-    it("最大API呼び出し回数を超えた場合に処理を停止する", async () => {
-      for (let i = 1; i <= MAX_API_CALLS; i++) {
-        mockedAxios.get.mockResolvedValueOnce({
-          data: {
-            articles: [{ id: i + 1, title: `Article ${i + 1}`, published_at: "2025-04-29T12:00:00+09:00", liked_count: 10 }],
-            next_page: i < MAX_API_CALLS ? i + 1 : null,
-          },
-        });
-      }
+    it(
+      "最大API呼び出し回数を超えた場合に処理を停止する",
+      async () => {
+        for (let i = 1; i <= MAX_API_CALLS; i++) {
+          mockedAxios.get.mockResolvedValueOnce({
+            data: {
+              articles: [{ id: i + 1, title: `Article ${i + 1}`, published_at: "2025-04-29T12:00:00+09:00", liked_count: 10 }],
+              next_page: i < MAX_API_CALLS ? i + 1 : null,
+            },
+          });
+        }
 
-      const result = await fetchArticlesByDate(dayjs("2025-04-23"), dayjs("2025-04-29T23:59:59+09:00"));
-      expect(mockedAxios.get).toHaveBeenCalledTimes(MAX_API_CALLS);
-      expect(result.length).toBe(MAX_API_CALLS); // 各ページから1記事ずつ取得
-    }, 10000); // 1sの遅延と10回呼び出しを考慮して10秒のタイムアウトを設定
+        const result = await fetchArticlesByDate(dayjs("2025-04-23"), dayjs("2025-04-29T23:59:59+09:00"));
+        expect(mockedAxios.get).toHaveBeenCalledTimes(MAX_API_CALLS);
+        expect(result.length).toBe(MAX_API_CALLS); // 各ページから1記事ずつ取得
+      },
+      1000 * MAX_API_CALLS
+    ); // 1sの遅延と10回呼び出しを考慮して10秒のタイムアウトを設定
   });
 
   describe("saveArticlesToS3", () => {

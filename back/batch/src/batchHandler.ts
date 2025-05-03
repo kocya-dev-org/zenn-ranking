@@ -13,7 +13,8 @@ dayjs.tz.setDefault("Asia/Tokyo");
 const ZENN_API_BASE_URL = "https://zenn.dev/api";
 const ARTICLES_ENDPOINT = `${ZENN_API_BASE_URL}/articles`;
 
-export const MAX_API_CALLS = 10;
+export const MAX_API_CALLS = 20;
+export const MAX_ARTICLES_COUNT = 100;
 
 const s3Client = new S3Client({ region: "ap-northeast-1" });
 const dynamoDbClient = new DynamoDBClient({ region: "ap-northeast-1" });
@@ -63,6 +64,7 @@ export const fetchArticlesByDate = async (startDate: dayjs.Dayjs, endDate: dayjs
   const articles: Article[] = [];
   let page: number | null = 1;
   let apiCallCount = 0;
+  console.log(`Fetching articles from ${startDate} to ${endDate}`);
 
   while (page && page > 0) {
     try {
@@ -82,7 +84,7 @@ export const fetchArticlesByDate = async (startDate: dayjs.Dayjs, endDate: dayjs
       const response: any = await axios.get(ARTICLES_ENDPOINT, {
         params: {
           page: `${page}`,
-          count: "100", // 1ページあたりの取得件数 (最大100件)
+          count: `${MAX_ARTICLES_COUNT}`, // 1ページあたりの取得件数 (最大100件)
           order: "latest", // 最新順に取得
         },
       });
@@ -98,7 +100,6 @@ export const fetchArticlesByDate = async (startDate: dayjs.Dayjs, endDate: dayjs
 
       for (const article of currentArticles) {
         const articleDate = dayjs(article.published_at).tz("Asia/Tokyo");
-
         if (articleDate.isBefore(startDate)) {
           page = null;
           continue;
@@ -319,7 +320,8 @@ export const processArticlesForDate = async (startDate: dayjs.Dayjs, endDate: da
  */
 export const handler = async (event: APIGatewayProxyEvent) => {
   try {
-    const startDate = dayjs(event.queryStringParameters?.date) || getStartDayOfPreviousWeek();
+    console.log(`queryStringParameters.date = ${event.queryStringParameters?.date}`);
+    const startDate = getStartDayOfPreviousWeek();
     const endDate = dayjs(startDate).add(7, "day").subtract(1, "millisecond");
     console.log(`Processing articles for date: ${startDate} ${endDate}`);
 

@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import RankingView from './views/RankingView.vue'
-import AboutView from './views/AboutView.vue'
+import { ref } from "vue";
+import RankingView from "./views/RankingView.vue";
+import AboutView from "./views/AboutView.vue";
 
-const activeTab = ref('ranking')
+const activeTab = ref("ranking");
 </script>
 
 <template>
   <div class="container">
     <header>
-      <h1>Zenn Ranking</h1>
+      <h1>Zenn Weekly Ranking</h1>
     </header>
     <main>
       <el-tabs v-model="activeTab" class="main-tabs">

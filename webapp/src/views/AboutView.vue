@@ -3,7 +3,7 @@
 <template>
   <div class="about-container">
     <el-card>
-      <h2>Zenn Rankingについて</h2>
+      <h2>Zenn Weekly Rankingについて</h2>
       <p>このサイトはZennの記事を「いいね」数に基づいてランキング化したものです。</p>
       <p>1週間以内に投稿された記事を日単位で集計し、ランキング上位10位の推移を確認できます。</p>
     </el-card>

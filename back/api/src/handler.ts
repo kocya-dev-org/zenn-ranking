@@ -39,7 +39,7 @@ const VALID_PARAMS = {
 export const handler = async (event: APIGatewayProxyEvent) => {
   try {
     const params = parseQueryParameters(event.queryStringParameters || {});
-    
+
     if (!params) {
       return {
         statusCode: 400,
@@ -48,7 +48,7 @@ export const handler = async (event: APIGatewayProxyEvent) => {
     }
 
     const data = await fetchRankingData(params);
-    
+
     return {
       statusCode: 200,
       body: JSON.stringify({ data }),
@@ -120,8 +120,7 @@ function generateDateKeys(unit: "daily" | "weekly" | "monthly", range: number): 
         key = today.subtract(i, "day").format("YYYY-MM-DD");
         break;
       case "weekly":
-        key = today.subtract(i, "week").format("YYYY-") + 
-              today.subtract(i, "week").week().toString().padStart(2, "0");
+        key = today.subtract(i, "week").format("YYYY-") + today.subtract(i, "week").week().toString().padStart(2, "0");
         break;
       case "monthly":
         key = today.subtract(i, "month").format("YYYY-MM");
@@ -142,7 +141,7 @@ async function fetchRankingData(params: RankingQueryParams) {
   const { unit, range } = params;
   const tableName = UNIT_MAP[unit];
   const dateKeys = generateDateKeys(unit, range);
-  
+
   try {
     const promises = dateKeys.map(async (key) => {
       try {
@@ -154,17 +153,17 @@ async function fetchRankingData(params: RankingQueryParams) {
         });
 
         const response = await dynamoDBClient.send(command);
-        
+
         if (!response.Item || !response.Item.contents || !response.Item.contents.S) {
           console.log(`No data found for key: ${key}`);
           return null;
         }
 
         const content = JSON.parse(response.Item.contents.S);
-        
+
         return {
           key,
-          articles: content.articles || [],
+          articles: content?.articles?.slice(0, params.count) || [],
         };
       } catch (error) {
         console.error(`Error fetching data for key ${key}:`, error);

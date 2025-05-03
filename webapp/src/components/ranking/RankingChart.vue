@@ -3,6 +3,19 @@ import { ref, onMounted, watch, onUnmounted } from 'vue'
 import * as echarts from 'echarts'
 import type { TrendData } from '../../feature/trends'
 
+/**
+ * 文字列を指定された長さに制限し、必要に応じて省略記号を追加します
+ * @param text 制限する文字列
+ * @param maxLength 最大長（デフォルト: 20）
+ * @returns 制限された文字列
+ */
+const truncateTitle = (text: string, maxLength: number = 20): string => {
+  if (text.length <= maxLength) {
+    return text
+  }
+  return text.substring(0, maxLength) + '...'
+}
+
 const props = defineProps<{
   trendData: TrendData
 }>()
@@ -48,7 +61,7 @@ const updateChart = () => {
       trigger: 'axis',
     },
     legend: {
-      data: topArticles.map(article => article.title),
+      data: topArticles.map(article => truncateTitle(article.title)),
       type: 'scroll',
       orient: 'horizontal',
       bottom: 0

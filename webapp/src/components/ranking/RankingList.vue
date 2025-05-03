@@ -9,9 +9,9 @@ const openUserPage = (username: string) => {
   window.open(`https://zenn.dev/${username}`, '_blank')
 }
 
-const openArticlePage = (username: string, articleId: number) => {
-  // 実際のURLパスの構造が不明なので、仮のパスを使用
-  window.open(`https://zenn.dev/${username}/articles/${articleId}`, '_blank')
+const openArticlePage = (username: string, _articleId: number, slug: string) => {
+  // Zennの記事ページURLのフォーマットに従う
+  window.open(`https://zenn.dev/${username}/articles/${slug}`, '_blank')
 }
 </script>
 
@@ -36,7 +36,7 @@ const openArticlePage = (username: string, articleId: number) => {
     
     <el-table-column label="記事タイトル">
       <template #default="scope">
-        <div class="article-title" @click="openArticlePage(scope.row.user.userName, scope.row.id)">
+        <div class="article-title" @click="openArticlePage(scope.row.user.userName, scope.row.id, scope.row.slug)">
           {{ scope.row.title }}
         </div>
       </template>

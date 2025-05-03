@@ -31,6 +31,7 @@ export type ArticleData = {
   articleType: string;
   publishedAt: string;
   user: User;
+  slug: string;
 };
 
 /**
@@ -105,6 +106,16 @@ export const getTrends = async (unit: string, range: number): Promise<TrendData>
     }
     
     const data: TrendData = await response.json();
+    
+    if (data && data.data) {
+      data.data.forEach(unit => {
+        unit.articles.forEach(article => {
+          if (!article.slug) {
+            article.slug = article.id.toString();
+          }
+        });
+      });
+    }
     
     apiCache[cacheKey] = {
       timestamp: now,

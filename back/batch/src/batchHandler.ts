@@ -112,6 +112,16 @@ export const fetchArticlesByDate = async (startDate: dayjs.Dayjs, endDate: dayjs
         }
 
         if (article.liked_count > 0) {
+          delete article.post_type;
+          delete article.body_letters_count;
+          delete article.article_type;
+          delete article.emoji;
+          delete article.is_suspending_private;
+          delete article.body_updated_at;
+          delete article.source_repo_updated_at;
+          delete article.pinned;
+          delete article.path;
+          delete article.publication;
           articles.push(article);
         }
       }

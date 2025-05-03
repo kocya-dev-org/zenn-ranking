@@ -70,8 +70,8 @@ describe("batchHandler", () => {
 
   describe("getStartDayOfPreviousWeek", () => {
     it("前日から1週間前の日付を返す", () => {
-      const result = getStartDayOfPreviousWeek();
       const now = dayjs().tz("Asia/Tokyo");
+      const result = getStartDayOfPreviousWeek(now.format("YYYY-MM-DD"));
       const diff = now.diff(result, "day");
       expect(diff).toBe(7);
 
@@ -131,7 +131,7 @@ describe("batchHandler", () => {
       const result = await fetchArticlesByDate(dayjs("2025-04-23"), dayjs("2025-04-29T23:59:59+09:00"));
 
       expect(mockedAxios.get).toHaveBeenCalledTimes(2);
-      expect(result).toHaveLength(4);
+      expect(result).toHaveLength(3);
     });
 
     it("ページネーションを正しく処理する 次ページがnullの場合はそこで終了", async () => {

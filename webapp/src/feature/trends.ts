@@ -1,5 +1,3 @@
-import dayjs from "dayjs";
-
 /**
  * ユーザーの基本的なプロフィール情報を表します。
  *
@@ -55,6 +53,15 @@ export type TrendData = {
   data: TrendUnit[];
 };
 
+interface CacheEntry {
+  timestamp: number;
+  data: TrendData;
+}
+
+type CacheKey = string;
+
+const apiCache: Record<CacheKey, CacheEntry> = {};
+
 /**
  * トレンドデータを取得するための関数
  *
@@ -63,43 +70,56 @@ export type TrendData = {
  * @returns - トレンドデータのPromise。
  */
 export const getTrends = async (unit: string, range: number): Promise<TrendData> => {
-  await setTimeout(() => {}, 1);
   console.log("getTrends", unit, range);
-  // dummy
-  const now = dayjs();
-  const getKey = (unit: string, index: number) => {
-    switch (unit) {
-      case "day":
-        return now.add(index - (range - 1), "day").format("YYYY-MM-DD");
-      case "week":
-        return `W${index.toString().padStart(2, "0")}`;
-      case "month":
-        return now.add(index - (range - 1), "month").format("YYYY-MM");
-      default:
-        throw new Error("Invalid unit");
+  
+  const unitMap: Record<string, string> = {
+    day: "daily",
+    week: "weekly",
+    month: "monthly"
+  };
+  
+  const cacheKey = `${unit}_${range}`;
+  
+  const now = Date.now();
+  const cachedData = apiCache[cacheKey];
+  if (cachedData && (now - cachedData.timestamp < 60 * 60 * 1000)) {
+    console.log("Using cached data for", unit, range);
+    return cachedData.data;
+  }
+  
+  const domain = "dml3tkm972yby.cloudfront.net";
+  const apiUrl = `https://${domain}/api/ranking`;
+  
+  const params = new URLSearchParams({
+    unit: unitMap[unit],
+    range: range.toString(),
+    count: "10",
+    order: "liked"
+  });
+  
+  try {
+    const response = await fetch(`${apiUrl}?${params.toString()}`);
+    
+    if (!response.ok) {
+      throw new Error(`API request failed with status ${response.status}`);
     }
-  };
-
-  const getArticles = (index: number) => {
-    return {
-      id: 1,
-      title: `トレンド記事${index}`,
-      commentsCount: Math.floor(Math.random() * 100),
-      likedCount: Math.floor(Math.random() * 100),
-      articleType: "article",
-      publishedAt: now.add(index - (range - 1), "day").toISOString(),
-      user: {
-        id: 1,
-        userName: `user${index}`,
-        name: `ユーザー${index}`,
-        avatarSmallUrl: `https://example.com/avatar${index}.png`,
-      },
+    
+    const data: TrendData = await response.json();
+    
+    apiCache[cacheKey] = {
+      timestamp: now,
+      data
     };
-  };
-  const articles = Array.from({ length: 10 }, (_, articlesIndex) => getArticles(articlesIndex));
-  const data = Array.from({ length: range }, (_, index) => ({
-    key: getKey(unit, index),
-    articles: articles,
-  }));
-  return { data };
+    
+    return data;
+  } catch (error) {
+    console.error("Error fetching trend data:", error);
+    
+    if (cachedData) {
+      console.log("Using cached data after fetch error");
+      return cachedData.data;
+    }
+    
+    return { data: [] };
+  }
 };

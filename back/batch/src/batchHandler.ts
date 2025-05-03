@@ -97,10 +97,10 @@ export const fetchArticlesByDate = async (startDate: dayjs.Dayjs, endDate: dayjs
         continue;
       }
 
-      let stopProcess: Boolean = false;
+      let stopProcess: boolean = false;
       for (const article of currentArticles) {
         const articleDate = dayjs(article.published_at).tz("Asia/Tokyo");
-        // 最新からソートしてあるので開始日以前の記事があれば以降は全て古い記事　→　処理を停止
+        // 最新からソートしてあるので開始日以前の記事があれば以降は全て古い記事 → 処理を停止
         if (articleDate.isBefore(startDate)) {
           stopProcess = true;
           break;

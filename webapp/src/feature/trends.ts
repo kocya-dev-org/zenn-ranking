@@ -94,7 +94,7 @@ export const getTrends = async (unit: string, range: number): Promise<TrendData>
   const params = new URLSearchParams({
     unit: unitMap[unit],
     range: range.toString(),
-    count: "10",
+    count: "30",
     order: "liked",
   });
 

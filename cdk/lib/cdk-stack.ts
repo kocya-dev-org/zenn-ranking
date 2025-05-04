@@ -20,6 +20,7 @@ export class CdkStack extends cdk.Stack {
     const PREFIX = "zenn-ranking";
     const API_PATH = "api";
 
+    // コンテンツ公開用S3バケット
     const webappBucket = new s3.Bucket(this, `${PREFIX}-webapp-bucket`, {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
@@ -27,6 +28,7 @@ export class CdkStack extends cdk.Stack {
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
     });
 
+    // 収集データ保存用S3バケット
     const dataBucket = new s3.Bucket(this, `${PREFIX}-data-bucket`, {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
@@ -34,6 +36,7 @@ export class CdkStack extends cdk.Stack {
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
     });
 
+    // 分析データ保存用DynamoDBテーブル
     const dailyTable = new dynamodb.Table(this, `${PREFIX}-analysis-daily-table`, {
       tableName: `${PREFIX}-analysis-daily-table`,
       partitionKey: { name: "yyyy-mm-dd", type: dynamodb.AttributeType.STRING },
@@ -41,12 +44,17 @@ export class CdkStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
+    //-----------------------------------
+    // API用Lambda関数の設定
+    //-----------------------------------
+    // API用ロググループ
     const apiHandlerLogGroup = new logs.LogGroup(this, `${PREFIX}-api-handler-logs`, {
       logGroupName: `/aws/lambda/${PREFIX}-api-handler`,
       retention: logs.RetentionDays.TWO_WEEKS,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
+    // API用Lambda関数
     const apiHandler = new nodejs.NodejsFunction(this, `${PREFIX}-api-handler`, {
       runtime: lambda.Runtime.NODEJS_20_X,
       entry: "../back/api/src/handler.ts",
@@ -68,12 +76,17 @@ export class CdkStack extends cdk.Stack {
       logGroup: apiHandlerLogGroup,
     });
 
+    //-----------------------------------
+    // バッチ用Lambda関数の設定
+    //-----------------------------------
+    // バッチ処理用ロググループ
     const batchHandlerLogGroup = new logs.LogGroup(this, `${PREFIX}-batch-handler-logs`, {
       logGroupName: `/aws/lambda/${PREFIX}-batch-handler`,
       retention: logs.RetentionDays.TWO_WEEKS,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
+    // バッチ処理用Lambda関数
     const batchHandler = new nodejs.NodejsFunction(this, `${PREFIX}-batch-handler`, {
       runtime: lambda.Runtime.NODEJS_20_X,
       entry: "../back/batch/src/batchHandler.ts",
@@ -97,18 +110,22 @@ export class CdkStack extends cdk.Stack {
       logGroup: batchHandlerLogGroup,
     });
 
+    // 権限設定
     dailyTable.grantReadWriteData(apiHandler);
-
     dailyTable.grantReadWriteData(batchHandler);
-
     dataBucket.grantReadWrite(batchHandler);
 
+    //-----------------------------------
+    // API Gatewayの設定
+    //-----------------------------------
+    // API Gatewayのロググループ
     const apiLogGroup = new logs.LogGroup(this, `${PREFIX}-api-logs`, {
       logGroupName: `/aws/apigateway/${PREFIX}-api`,
       retention: logs.RetentionDays.TWO_WEEKS,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
+    // API GatewayaとLambdaの統合
     const api = new apigateway.RestApi(this, `${PREFIX}-api`, {
       restApiName: `${PREFIX}-api`,
       deployOptions: {
@@ -123,18 +140,25 @@ export class CdkStack extends cdk.Stack {
       },
       cloudWatchRole: true,
     });
-
     const apiResource = api.root.addResource(API_PATH);
     const rankingResource = apiResource.addResource("ranking");
     rankingResource.addMethod("GET", new apigateway.LambdaIntegration(apiHandler));
 
+    //------------------------------------
+    // EventBridgeの設定
+    //------------------------------------
+    // 定期実行のルールを作成
     const rule = new events.Rule(this, `${PREFIX}-daily-rule`, {
       schedule: events.Schedule.cron({ minute: "0", hour: "16", day: "*", month: "*", year: "*" }),
     });
     rule.addTarget(new targets.LambdaFunction(batchHandler));
-
+    // 権限設定
     batchHandler.grantInvoke(new iam.ServicePrincipal("events.amazonaws.com"));
 
+    //------------------------------------
+    // CloudFrontの設定
+    //------------------------------------
+    // CloudFrontのキャッシュポリシー
     const apiCachePolicy = new cloudfront.CachePolicy(this, `${PREFIX}-api-cache-policy`, {
       cachePolicyName: `${PREFIX}-api-cache-policy`,
       comment: "Cache policy for API requests",
@@ -146,6 +170,7 @@ export class CdkStack extends cdk.Stack {
       queryStringBehavior: cloudfront.CacheQueryStringBehavior.allowList("count", "order", "unit", "range"),
     });
 
+    // CloudFrontの設定
     const distribution = new cloudfront.Distribution(this, `${PREFIX}-distribution`, {
       defaultBehavior: {
         origin: new origins.S3Origin(webappBucket),
@@ -174,6 +199,9 @@ export class CdkStack extends cdk.Stack {
       description: "Website URL",
     });
 
+    //------------------------------------
+    // S3バケットのデプロイ対象ファイルの設定
+    //------------------------------------
     try {
       const distPath = "../webapp/dist";
       new s3deploy.BucketDeployment(this, `${PREFIX}-webapp-deployment`, {

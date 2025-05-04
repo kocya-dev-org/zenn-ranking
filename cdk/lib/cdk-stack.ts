@@ -160,9 +160,9 @@ export class CdkStack extends cdk.Stack {
     const apiCachePolicy = new cloudfront.CachePolicy(this, `${PREFIX}-api-cache-policy`, {
       cachePolicyName: `${PREFIX}-api-cache-policy`,
       comment: "Cache policy for API requests",
-      defaultTtl: cdk.Duration.days(1),
+      defaultTtl: cdk.Duration.hours(6),
       minTtl: cdk.Duration.minutes(5),
-      maxTtl: cdk.Duration.days(1),
+      maxTtl: cdk.Duration.hours(6),
       enableAcceptEncodingGzip: true,
       enableAcceptEncodingBrotli: true,
       queryStringBehavior: cloudfront.CacheQueryStringBehavior.allowList("count", "order", "unit", "range"),

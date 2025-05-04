@@ -25,7 +25,7 @@ const UNIT_MAP = {
 };
 
 const VALID_PARAMS = {
-  count: [10],
+  count: [10, 30],
   order: ["liked"],
   unit: ["daily", "weekly", "monthly"],
   range: { min: 1, max: 31 },

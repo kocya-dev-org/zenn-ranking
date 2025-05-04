@@ -109,8 +109,8 @@ describe("batchHandler", () => {
       mockedAxios.get.mockResolvedValueOnce({
         data: {
           articles: [
-            { id: 1, title: "Article 1", published_at: "2025-04-29T12:00:00+09:00", liked_count: 10 },
-            { id: 2, title: "Article 2", published_at: "2025-04-30T00:00:00+09:00", liked_count: 10 },
+            { id: 1, title: "Article 1", published_at: "2025-04-29T12:00:00+09:00", liked_count: 10 }, // o
+            { id: 2, title: "Article 2", published_at: "2025-04-30T00:00:00+09:00", liked_count: 10 }, // x
           ],
           next_page: 2,
         },
@@ -119,19 +119,19 @@ describe("batchHandler", () => {
       mockedAxios.get.mockResolvedValueOnce({
         data: {
           articles: [
-            { id: 10, title: "Article 3", published_at: "2025-04-29T10:00:00+09:00", liked_count: 5 },
-            { id: 11, title: "Article 4", published_at: "2025-04-28T10:00:00+09:00", liked_count: 5 },
-            { id: 12, title: "Article 5", published_at: "2025-04-23T00:00:00+09:00", liked_count: 5 },
-            { id: 13, title: "Article 6", published_at: "2025-04-22T23:59:59+09:00", liked_count: 5 },
+            { id: 10, title: "Article 3", published_at: "2025-04-29T10:00:00+09:00", liked_count: 5 }, // o
+            { id: 11, title: "Article 4", published_at: "2025-04-28T10:00:00+09:00", liked_count: 5 }, // o
+            { id: 12, title: "Article 5", published_at: "2025-04-23T00:00:00+09:00", liked_count: 5 }, // o
+            { id: 13, title: "Article 6", published_at: "2025-04-22T23:59:59+09:00", liked_count: 5 }, // x
           ],
           next_page: null,
         },
       });
 
-      const result = await fetchArticlesByDate(dayjs("2025-04-23"), dayjs("2025-04-29T23:59:59+09:00"));
+      const result = await fetchArticlesByDate(dayjs("2025-04-23T00:00:00+09:00"), dayjs("2025-04-29T23:59:59+09:00"));
 
       expect(mockedAxios.get).toHaveBeenCalledTimes(2);
-      expect(result).toHaveLength(3);
+      expect(result).toHaveLength(4);
     });
 
     it("ページネーションを正しく処理する 次ページがnullの場合はそこで終了", async () => {

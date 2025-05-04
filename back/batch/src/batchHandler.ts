@@ -145,7 +145,7 @@ export const fetchArticlesByDate = async (startDate: dayjs.Dayjs, endDate: dayjs
  */
 export const saveArticlesToS3 = async (articles: Article[], date: dayjs.Dayjs): Promise<boolean> => {
   try {
-    const formattedDate = date.format("YYYY-MM-DD");
+    const formattedDate = date.tz("Asia/Tokyo").format("YYYY-MM-DD");
     const dateParts = formattedDate.split("-");
     const year = dateParts[0];
     const month = dateParts[1];
@@ -260,7 +260,7 @@ export const readArticlesFromS3 = async (date: dayjs.Dayjs): Promise<Article[]> 
  */
 export const saveArticlesToDynamoDB = async (articles: Article[], date: dayjs.Dayjs): Promise<boolean> => {
   try {
-    const formattedDate = date.format("YYYY-MM-DD");
+    const formattedDate = date.tz("Asia/Tokyo").format("YYYY-MM-DD");
 
     const sortedArticles = [...articles].sort((a, b) => b.liked_count - a.liked_count).slice(0, 30);
 
@@ -334,8 +334,8 @@ export const processArticlesForDate = async (startDate: dayjs.Dayjs, endDate: da
 export const handler = async (event: APIGatewayProxyEvent) => {
   try {
     console.log(`queryStringParameters.date = ${event.queryStringParameters?.date}`);
-    const startDate = getStartDayOfPreviousWeek(event.queryStringParameters?.date || dayjs().format("YYYY-MM-DD"));
-    const endDate = dayjs(startDate).add(7, "day").subtract(1, "millisecond");
+    const startDate = getStartDayOfPreviousWeek(event.queryStringParameters?.date || dayjs().tz("Asia/Tokyo").format("YYYY-MM-DD"));
+    const endDate = dayjs(startDate).tz("Asia/Tokyo").add(7, "day").subtract(1, "millisecond");
     console.log(`Processing articles for date: ${startDate} ${endDate}`);
 
     const success = await processArticlesForDate(startDate, endDate);

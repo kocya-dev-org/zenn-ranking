@@ -41,20 +41,6 @@ export class CdkStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
-    const weeklyTable = new dynamodb.Table(this, `${PREFIX}-analysis-weekly-table`, {
-      tableName: `${PREFIX}-analysis-weekly-table`,
-      partitionKey: { name: "yyyy-mm-dd", type: dynamodb.AttributeType.STRING },
-      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-    });
-
-    const monthlyTable = new dynamodb.Table(this, `${PREFIX}-analysis-monthly-table`, {
-      tableName: `${PREFIX}-analysis-monthly-table`,
-      partitionKey: { name: "yyyy-mm", type: dynamodb.AttributeType.STRING },
-      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-    });
-
     const apiHandlerLogGroup = new logs.LogGroup(this, `${PREFIX}-api-handler-logs`, {
       logGroupName: `/aws/lambda/${PREFIX}-api-handler`,
       retention: logs.RetentionDays.TWO_WEEKS,
@@ -77,8 +63,6 @@ export class CdkStack extends cdk.Stack {
       }),
       environment: {
         DAILY_TABLE_NAME: dailyTable.tableName,
-        WEEKLY_TABLE_NAME: weeklyTable.tableName,
-        MONTHLY_TABLE_NAME: monthlyTable.tableName,
         LOG_LEVEL: "INFO",
       },
       logGroup: apiHandlerLogGroup,
@@ -108,20 +92,14 @@ export class CdkStack extends cdk.Stack {
       environment: {
         DATA_BUCKET_NAME: dataBucket.bucketName,
         DAILY_TABLE_NAME: dailyTable.tableName,
-        WEEKLY_TABLE_NAME: weeklyTable.tableName,
-        MONTHLY_TABLE_NAME: monthlyTable.tableName,
         LOG_LEVEL: "INFO",
       },
       logGroup: batchHandlerLogGroup,
     });
 
     dailyTable.grantReadWriteData(apiHandler);
-    weeklyTable.grantReadWriteData(apiHandler);
-    monthlyTable.grantReadWriteData(apiHandler);
 
     dailyTable.grantReadWriteData(batchHandler);
-    weeklyTable.grantReadWriteData(batchHandler);
-    monthlyTable.grantReadWriteData(batchHandler);
 
     dataBucket.grantReadWrite(batchHandler);
 

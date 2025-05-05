@@ -84,14 +84,15 @@ const updateChart = () => {
 
   const option = {
     textStyle: {
-      fontFamily: "'Noto Sans JP', system-ui, Avenir, Helvetica, Arial, sans-serif"
+      fontFamily: "'Noto Sans JP', system-ui, Avenir, Helvetica, Arial, sans-serif",
     },
     tooltip: {
       trigger: "axis",
       formatter: function (params: { axisValueLabel: string; color: string; seriesName: string; value: number }[]) {
         let tooltipContent = params[0].axisValueLabel + "<br/>";
-
-        params.forEach((param: { color: string; seriesName: string; value: number | null }) => {
+        // paramsをvalueの値で降順にソート
+        const sortedList = params.filter((v) => v).sort((a, b) => (b.value || 0) - (a.value || 0));
+        sortedList.forEach((param: { color: string; seriesName: string; value: number | null }) => {
           if (param.value) {
             // シリーズの色からマーカーを作成
             const colorSpan = `<span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:${param.color};"></span>`;
@@ -109,8 +110,8 @@ const updateChart = () => {
       orient: "horizontal",
       bottom: 0,
       textStyle: {
-        fontFamily: "'Noto Sans JP', system-ui, Avenir, Helvetica, Arial, sans-serif"
-      }
+        fontFamily: "'Noto Sans JP', system-ui, Avenir, Helvetica, Arial, sans-serif",
+      },
     },
     grid: {
       left: "3%",

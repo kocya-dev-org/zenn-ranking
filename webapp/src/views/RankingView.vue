@@ -10,6 +10,19 @@ const trendData = ref<TrendData | null>(null)
 const loading = ref(true)
 const selectedDateIndex = ref<number | null>(null) // 選択された日付のインデックス
 
+/**
+ * 日付文字列を「YYYY年M月D日」形式にフォーマットします
+ * @param dateStr - フォーマットする日付文字列（例: '2025-05-05'）
+ * @returns フォーマットされた日付文字列
+ */
+const formatDate = (dateStr: string): string => {
+  const date = new Date(dateStr)
+  const year = date.getFullYear()
+  const month = date.getMonth() + 1
+  const day = date.getDate()
+  return `${year}年${month}月${day}日`
+}
+
 const fetchData = async () => {
   loading.value = true
   try {
@@ -54,7 +67,9 @@ onMounted(fetchData)
     <el-card class="ranking-card">
       <template #header>
         <div class="ranking-header">
-          <h2>ランキング一覧</h2>
+          <h2>ランキング一覧 {{ trendData && trendData.data.length > 0 ? 
+            `(${formatDate(trendData.data[selectedDateIndex !== null ? selectedDateIndex : trendData.data.length - 1].key)})` 
+            : '' }}</h2>
         </div>
       </template>
       <div v-if="loading" class="loading">

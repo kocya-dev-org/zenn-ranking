@@ -22,6 +22,7 @@ import {
   saveArticlesToDynamoDB,
   snakeToCamel,
   convertKeysToCamelCase,
+  calculateTtlValue,
 } from "../src/batchHandler";
 import { APIGatewayProxyEvent } from "aws-lambda";
 
@@ -310,6 +311,16 @@ describe("batchHandler", () => {
       if (command.input.Item) {
         expect(command.input.Item["yyyy-mm-dd"].S).toBe("2025-04-29");
         expect(command.input.Item.contents.S).toBeDefined();
+        // TTL属性のテストを追加
+        expect(command.input.Item.expired).toBeDefined();
+        expect(command.input.Item.expired.N).toBeDefined();
+
+        // TTL値が30日後のUnixタイムスタンプであることを確認
+        const ttlValue = parseInt(command.input.Item.expired.N!);
+        const testDate = dayjs("2025-04-29");
+        const expectedTtl = calculateTtlValue(testDate);
+        expect(ttlValue).toBe(expectedTtl);
+
         if (command.input.Item.contents.S) {
           const contents = JSON.parse(command.input.Item.contents.S);
           expect(contents.articles).toHaveLength(2);
@@ -425,6 +436,52 @@ describe("batchHandler", () => {
       expect(result.statusCode).toBe(500);
       const body = JSON.parse(result.body);
       expect(body.message).toContain(`Failed to process articles for`);
+    });
+  });
+
+  describe("calculateTtlValue", () => {
+    it("30日後のUnixタイムスタンプを正しく計算する", () => {
+      const testDate = dayjs("2025-04-29T12:00:00+09:00");
+      const result = calculateTtlValue(testDate);
+
+      // 30日後の日付を計算
+      const expectedDate = testDate.add(30, "day");
+      const expectedTimestamp = expectedDate.unix();
+
+      expect(result).toBe(expectedTimestamp);
+    });
+
+    it("異なる日付で30日後のUnixタイムスタンプを正しく計算する", () => {
+      const testDate = dayjs("2025-01-01T00:00:00+09:00");
+      const result = calculateTtlValue(testDate);
+
+      // 30日後は2025-01-31
+      const expectedDate = dayjs("2025-01-31T00:00:00+09:00");
+      const expectedTimestamp = expectedDate.unix();
+
+      expect(result).toBe(expectedTimestamp);
+    });
+
+    it("月をまたぐ場合の30日後のUnixタイムスタンプを正しく計算する", () => {
+      const testDate = dayjs("2025-02-01T12:00:00+09:00");
+      const result = calculateTtlValue(testDate);
+
+      // 30日後は2025-03-03
+      const expectedDate = dayjs("2025-03-03T12:00:00+09:00");
+      const expectedTimestamp = expectedDate.unix();
+
+      expect(result).toBe(expectedTimestamp);
+    });
+
+    it("年をまたぐ場合の30日後のUnixタイムスタンプを正しく計算する", () => {
+      const testDate = dayjs("2024-12-15T18:30:00+09:00");
+      const result = calculateTtlValue(testDate);
+
+      // 30日後は2025-01-14
+      const expectedDate = dayjs("2025-01-14T18:30:00+09:00");
+      const expectedTimestamp = expectedDate.unix();
+
+      expect(result).toBe(expectedTimestamp);
     });
   });
 });

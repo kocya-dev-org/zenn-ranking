@@ -34,6 +34,13 @@ export class CdkStack extends cdk.Stack {
       autoDeleteObjects: true,
       publicReadAccess: false,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      lifecycleRules: [
+        {
+          id: "delete-old-data",
+          enabled: true,
+          expiration: cdk.Duration.days(30), // 30日後に自動削除
+        },
+      ],
     });
 
     // 分析データ保存用DynamoDBテーブル

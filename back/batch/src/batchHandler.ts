@@ -280,6 +280,7 @@ export const saveArticlesToDynamoDB = async (articles: Article[], date: dayjs.Da
       Item: {
         "yyyy-mm-dd": { S: formattedDate },
         contents: { S: JSON.stringify(contentsObject) },
+        expired: { N: calculateTtlValue(date).toString() }, // TTL属性を追加
       },
     });
 
@@ -324,6 +325,15 @@ export const processArticlesForDate = async (startDate: dayjs.Dayjs, endDate: da
     console.error(`Error processing articles for ${startDate} ${endDate}:`, error);
     return false;
   }
+};
+
+/**
+ * TTL値を計算する関数（30日後のUnixタイムスタンプ）
+ * @param date 基準日付
+ * @returns 30日後のUnixタイムスタンプ
+ */
+export const calculateTtlValue = (date: dayjs.Dayjs): number => {
+  return date.add(30, "day").unix();
 };
 
 /**

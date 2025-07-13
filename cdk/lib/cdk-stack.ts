@@ -49,6 +49,7 @@ export class CdkStack extends cdk.Stack {
       partitionKey: { name: "yyyy-mm-dd", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
+      timeToLiveAttribute: "expired", // TTL属性を追加
     });
 
     //-----------------------------------

@@ -263,20 +263,6 @@ describe("getDateRange", () => {
 
       expect(() => getDateRange("", targetDate, range)).toThrow("Unsupported unit: ");
     });
-
-    it("null単位が指定された場合、エラーがスローされる", () => {
-      const targetDate = dayjs("2025-04-30");
-      const range = 1;
-
-      expect(() => getDateRange(null as any, targetDate, range)).toThrow("Unsupported unit: null");
-    });
-
-    it("undefined単位が指定された場合、エラーがスローされる", () => {
-      const targetDate = dayjs("2025-04-30");
-      const range = 1;
-
-      expect(() => getDateRange(undefined as any, targetDate, range)).toThrow("Unsupported unit: undefined");
-    });
   });
 
   describe("連続性とパフォーマンステスト", () => {

@@ -80,7 +80,8 @@ function parseQueryParameters(queryParams: Record<string, string | undefined>): 
   const unit = queryParams.unit as "daily" | "weekly" | "monthly";
   const range = queryParams.range ? parseInt(queryParams.range, 10) : 0;
 
-  if (!VALID_PARAMS.count.includes(count)) {
+  // NaNチェックを追加
+  if (isNaN(count) || !VALID_PARAMS.count.includes(count)) {
     console.error(`Invalid count parameter: ${count}`);
     return null;
   }
@@ -95,7 +96,8 @@ function parseQueryParameters(queryParams: Record<string, string | undefined>): 
     return null;
   }
 
-  if (range < VALID_PARAMS.range.min || range > VALID_PARAMS.range.max) {
+  // NaNチェックを追加
+  if (isNaN(range) || range < VALID_PARAMS.range.min || range > VALID_PARAMS.range.max) {
     console.error(`Invalid range parameter: ${range}`);
     return null;
   }

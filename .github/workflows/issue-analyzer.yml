@@ -41,13 +41,12 @@ jobs:
         run: |
           # Convert multiline string to JSON-safe format
           ESCAPED_PROMPT=$(echo "$REVIEW_PROMPT" | jq -Rs .)
-          echo "$ESCAPED_PROMPT"
-          echo "$PLAYBOOK_ID"
-          #RESPONSE=$(curl -s -X POST \
-          #  -H "Authorization: Bearer $SECRETS_DEVIN_API_KEY" \
-          #  -H "Content-Type: application/json" \
-          #  -d "{\"prompt\": $ESCAPED_PROMPT, \"playbook_id\": \"$PLAYBOOK_ID\"}" \
-          #  "https://api.devin.ai/v1/sessions")
+
+          RESPONSE=$(curl -s -X POST \
+            -H "Authorization: Bearer $SECRETS_DEVIN_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "{\"prompt\": $ESCAPED_PROMPT, \"playbook_id\": \"$PLAYBOOK_ID\"}" \
+            "https://api.devin.ai/v1/sessions")
 
           echo "Devin API response:"
           echo "$RESPONSE"

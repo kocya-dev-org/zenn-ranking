@@ -1,0 +1,53 @@
+name: Issue Analyzer
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  analyze-issue:
+    if: >-
+      github.event.issue.pull_request == null &&
+      startsWith(github.event.comment.body, '/devin ')
+    runs-on: ubuntu-latest
+    permissions:
+      issues: read
+
+    steps:
+      - name: コメントからplaybook_idを抽出
+        id: extract
+        run: |
+          COMMENT_BODY='${{ github.event.comment.body }}'
+
+          if [[ ! "$COMMENT_BODY" =~ ^/devin[[:space:]]+([^[:space:]]+)$ ]]; then
+            echo "無効なコマンド形式です。'/devin {playbook_id}' 形式で入力してください。"
+            exit 1
+          fi
+
+          PLAYBOOK_ID="${BASH_REMATCH[1]}"
+          ISSUE_URL='${{ github.event.issue.html_url }}'
+          REVIEW_PROMPT="以下のIssueを分析してください: ${ISSUE_URL}"
+
+          echo "playbook_id=${PLAYBOOK_ID}" >> "$GITHUB_OUTPUT"
+          echo "review_prompt<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$REVIEW_PROMPT" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Devin APIを呼び出す
+        env:
+          SECRETS_DEVIN_API_KEY: ${{ secrets.SECRETS_DEVIN_API_KEY }}
+          REVIEW_PROMPT: ${{ steps.extract.outputs.review_prompt }}
+          PLAYBOOK_ID: ${{ steps.extract.outputs.playbook_id }}
+        run: |
+          # Convert multiline string to JSON-safe format
+          ESCAPED_PROMPT=$(echo "$REVIEW_PROMPT" | jq -Rs .)
+          echo "$ESCAPED_PROMPT"
+          echo "$PLAYBOOK_ID"
+          #RESPONSE=$(curl -s -X POST \
+          #  -H "Authorization: Bearer $SECRETS_DEVIN_API_KEY" \
+          #  -H "Content-Type: application/json" \
+          #  -d "{\"prompt\": $ESCAPED_PROMPT, \"playbook_id\": \"$PLAYBOOK_ID\"}" \
+          #  "https://api.devin.ai/v1/sessions")
+
+          echo "Devin API response:"
+          echo "$RESPONSE"

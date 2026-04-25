@@ -39,7 +39,6 @@ interface TestArticle {
   [key: string]: unknown;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockedAxios = axios as any;
 
 const s3Mock = mockClient(S3Client);
@@ -178,7 +177,7 @@ describe("batchHandler", () => {
         expect(mockedAxios.get).toHaveBeenCalledTimes(MAX_API_CALLS);
         expect(result.length).toBe(MAX_API_CALLS); // 各ページから1記事ずつ取得
       },
-      1000 * MAX_API_CALLS
+      1000 * MAX_API_CALLS,
     ); // 1sの遅延と10回呼び出しを考慮して10秒のタイムアウトを設定
   });
 
@@ -353,7 +352,7 @@ describe("batchHandler", () => {
               JSON.stringify([
                 { id: 1, title: "Article 1", published_at: "2025-04-29T12:00:00+09:00", liked_count: 10 },
                 { id: 3, title: "Article 3", published_at: "2025-04-28T10:00:00+09:00", liked_count: 5 },
-              ])
+              ]),
             ),
         } as any,
       });
@@ -407,7 +406,7 @@ describe("batchHandler", () => {
               JSON.stringify([
                 { id: 1, title: "Article 1", published_at: "2025-04-29T12:00:00+09:00", liked_count: 10 },
                 { id: 3, title: "Article 3", published_at: "2025-04-28T10:00:00+09:00", liked_count: 5 },
-              ])
+              ]),
             ),
         } as any,
       });

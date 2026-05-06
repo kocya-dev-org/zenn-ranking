@@ -197,9 +197,9 @@ ci_result: <pass/fail>
 ### Step 5: レポート生成・履歴インデックス更新
 
 1. **日付付きファイル名でレポートを保存する**
-   - レポート: `./security-reports/YYYY-MM-DD-full-scan-report.md`
-   - カバレッジ: `./security-reports/YYYY-MM-DD-full-scan-coverage.yml`
-   - 日付は実行時の ISO 8601 形式（例: `2026-05-01`）
+   - レポート: `./security-reports/YYYY-MM-DD-HHmm-full-scan-report.md`
+   - カバレッジ: `./security-reports/YYYY-MM-DD-HHmm-full-scan-coverage.yml`
+   - 日時は実行時の ISO 8601 形式（例: `2026-05-01-1234`）
    - ディレクトリが存在しない場合は作成する
 
 2. 深刻度別ソート・修正優先順位・具体的な修正コマンドを含める
@@ -209,7 +209,7 @@ ci_result: <pass/fail>
    - 追記フォーマット:
 
    ```
-   | YYYY-MM-DD | full-scan | 全ソース (<総ファイル数>files / <scan_status>) | <Critical件数> | <High件数> | <Medium件数> | <CI結果> | [レポート](YYYY-MM-DD-full-scan-report.md) |
+   | YYYY-MM-DD-HHmm | full-scan | 全ソース (<総ファイル数>files / <scan_status>) | <Critical件数> | <High件数> | <Medium件数> | <CI結果> | [レポート](YYYY-MM-DD-HHmm-full-scan-report.md) |
    ```
 
    - CI結果: High 以上の発見が 0 件なら `✅ pass`、1件以上なら `❌ fail`
@@ -242,8 +242,8 @@ ci_result: <pass/fail>
 
 ## 完了条件
 
-- [ ] `./security-reports/YYYY-MM-DD-full-scan-report.md` が生成されている
-- [ ] `./security-reports/YYYY-MM-DD-full-scan-coverage.yml` が生成されている（`scan_type: full_static` 明記）
+- [ ] `./security-reports/YYYY-MM-DD-HHmm-full-scan-report.md` が生成されている
+- [ ] `./security-reports/YYYY-MM-DD-HHmm-full-scan-coverage.yml` が生成されている（`scan_type: full_static` 明記）
 - [ ] 検出されたモジュール・言語・フレームワークが明示されている
 - [ ] 解析済みファイル数とスキップしたファイルが明示されている
 - [ ] カバーできない領域が明示されている

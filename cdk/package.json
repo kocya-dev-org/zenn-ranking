@@ -18,6 +18,8 @@
     "@types/jest": "^29.5.14",
     "@types/node": "^22.15.3",
     "aws-cdk": "^2.1120.0",
+    "aws-cdk-lib": "^2.252.0",
+    "constructs": "^10.6.0",
     "eslint": "^10.0.0",
     "fs-extra": "^11.3.0",
     "globals": "^16.0.0",
@@ -26,10 +28,6 @@
     "ts-node": "^10.9.2",
     "typescript": "~5.6.3",
     "typescript-eslint": "^8.59.1"
-  },
-  "dependencies": {
-    "aws-cdk-lib": "^2.251.0",
-    "constructs": "^10.0.0"
   },
   "description": "This is a blank project for CDK development with TypeScript.",
   "main": "index.js",

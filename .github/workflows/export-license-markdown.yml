@@ -1,0 +1,54 @@
+name: export-license-markdown
+
+on:
+    workflow_dispatch:
+
+jobs:
+    export-license-markdown:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "22"
+                  cache: "npm"
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Install license-checker-rseidelsohn
+              run: npm install -g license-checker-rseidelsohn
+
+            - name: Generate custom format
+              shell: bash
+              run: |
+                  cat <<'EOF' > customFormat.json
+                  {
+                    "name": "",
+                    "licenses": "",
+                    "repository": "",
+                    "publisher": "",
+                    "version": "",
+                    "description": "",
+                    "copyright": "",
+                    "licenseText": "",
+                    "licenseModified": "no",
+                    "licenseFile": false,
+                    "path": false
+                  }
+                  EOF
+
+            - name: Export licenses to markdown
+              run: license-checker-rseidelsohn --production --customPath customFormat.json --markdown --out oss-license.md
+
+            - name: Upload oss-license artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: oss-license
+                  path: oss-license.md
+                  if-no-files-found: error

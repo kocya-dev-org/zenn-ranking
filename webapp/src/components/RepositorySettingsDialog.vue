@@ -23,7 +23,6 @@ const visibleProxy = computed({
 
 <template>
   <el-dialog v-model="visibleProxy" title="リポジトリ設定">
-    <el-button type="primary" @click="emit('add')">add</el-button>
     <div v-for="(repository, index) in props.draft" :key="index" class="repository-row">
       <el-input v-model="repository.name" placeholder="owner/repo" />
       <el-color-picker v-model="repository.color" />

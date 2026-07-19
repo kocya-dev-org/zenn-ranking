@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import RankingView from "./views/RankingView.vue";
 import AboutView from "./views/AboutView.vue";
+import OptionsView from "./views/OptionsView.vue";
 
 const activeTab = ref("ranking");
 </script>
@@ -18,6 +19,9 @@ const activeTab = ref("ranking");
         </el-tab-pane>
         <el-tab-pane label="About" name="about">
           <AboutView />
+        </el-tab-pane>
+        <el-tab-pane label="Options" name="options">
+          <OptionsView />
         </el-tab-pane>
       </el-tabs>
     </main>

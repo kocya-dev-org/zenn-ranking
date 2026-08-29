@@ -10,6 +10,7 @@
     "test": "jest",
     "watch": "tsc -w",
     "cdk": "cdk",
+    "init": "cdk bootstrap",
     "synth": "cdk synth --all",
     "deploy": "cdk deploy --all --require-approval never"
   },

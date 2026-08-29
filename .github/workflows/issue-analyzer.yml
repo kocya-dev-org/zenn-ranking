@@ -16,16 +16,16 @@ jobs:
     steps:
       - name: コメントからplaybook_nameを抽出
         id: extract
+        env:
+          COMMENT_BODY: ${{ github.event.comment.body }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
         run: |
-          COMMENT_BODY='${{ github.event.comment.body }}'
-
           if [[ ! "$COMMENT_BODY" =~ ^/devin[[:space:]]+([^[:space:]]+)$ ]]; then
             echo "無効なコマンド形式です。'/devin {playbook_name}' 形式で入力してください。"
             exit 1
           fi
 
           PLAYBOOK_NAME="${BASH_REMATCH[1]}"
-          ISSUE_URL='${{ github.event.issue.html_url }}'
           REVIEW_PROMPT="${ISSUE_URL}
                         ${PLAYBOOK_NAME}"
 
